@@ -3,22 +3,10 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
-from typing import Literal, List
+from typing import List
 import base64
 import time
-from constants.index import TIME
-
-
-ByType = Literal[
-    "id",
-    "name",
-    "xpath",
-    "css selector",
-    "link text",
-    "partial link text",
-    "tag name",
-    "class name",
-]
+from constants.index import TIME, ByType
 
 
 class Browser:
