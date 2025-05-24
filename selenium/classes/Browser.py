@@ -3,7 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
-from typing import Literal, Callable, Any
+from typing import Literal, List
 import time
 
 ByType = Literal[
@@ -81,3 +81,9 @@ class Browser:
     def goToDefaultWindow(self) -> None:
         self.driver.switch_to.window(self.curWindowHandle)
         print("초기 윈도우로 이동 완료")
+
+    def getAllChild(self, by: ByType, value: str) -> List[WebElement]:
+        elements = WebDriverWait(self.driver, 10).until(
+            EC.presence_of_all_elements_located((by, value))
+        )
+        return elements

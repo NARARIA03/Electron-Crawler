@@ -48,7 +48,6 @@ def crawlOpenGoKr(
         )
         # 확인 버튼 클릭 (새 창 자동으로 닫힘)
         browser.clickElement("xpath", '//*[@id="popup_wrap"]/div[2]/div[2]/div[5]/a[1]')
-
         # 초기 윈도우로 이동 (리셋)
         browser.goToDefaultWindow()
         # iframe에 focus
@@ -56,12 +55,27 @@ def crawlOpenGoKr(
         # 시작 날짜 종료 날짜 지정
         browser.typingInputElement("xpath", '//*[@id="startDate"]', startDate, True)
         browser.typingInputElement("xpath", '//*[@id="endDate"]', endDate, True)
-
         # 검색 버튼 클릭
         browser.clickElement("xpath", '//*[@id="popup_wrap"]/div[2]/div/div[3]/a[2]')
 
+        # 초기 윈도우로 이동 (리셋)
+        browser.goToDefaultWindow()
+        time.sleep(5)
+        # 원문 정보 크롤링을 위해 더보기 클릭
+        browser.clickElement("xpath", '//*[@id="info"]')
+        # 원문 정보 리스트로 가는 a태그 개수 확인
+        length = len(browser.getAllChild("css selector", "#infoList dt span.top a"))
+        if length == 0:
+            browser.close()
+        # 리스트 순회
+        for i in range(length):
+            link = browser.getAllChild("css selector", "#infoList dt span.top a")[i]
+            link.click()
+            time.sleep(5)
+            browser.driver.back()
+
         browser.close()
-        time.sleep(10)
+        time.sleep(5)
 
     except Exception as e:
         print("에러 발생:", e)
