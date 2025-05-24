@@ -2,6 +2,7 @@ from classes.Browser import Browser
 import time
 import re
 from typing import Optional
+from constants.index import TIME
 
 
 def crawlOpenGoKr(
@@ -70,7 +71,7 @@ def crawlOpenGoKr(
         browser.clickElement("xpath", '//*[@id="popup_wrap"]/div[2]/div/div[3]/a[2]')
         # iframe에서 나가기
         browser.unfocusIframe()
-        time.sleep(3)
+        time.sleep(TIME)
 
         # 검색 결과가 하나라도 있으면, 더보기 버튼 클릭
         count = browser.getElement("xpath", '//*[@id="totalPage"]').text
@@ -82,7 +83,11 @@ def crawlOpenGoKr(
 
         # 페이지네이션이 쿼리파라미터로 안 되어있는건.. 무슨 심보냐 진짜
         # 새 탭 열기로 해결해보자
+        curPageIdx = 1
         while True:
+            browser.fullScreenShot(
+                f"{query}_{organization}_{location}_{startDate}_{endDate}_{curPageIdx}"
+            )
             # 원문 정보 리스트로 가는 a태그 개수 확인
             length = len(browser.getAllChild("css selector", "#infoList dt span.top a"))
             # 리스트 순회
@@ -105,7 +110,7 @@ def crawlOpenGoKr(
                 browser.driver.switch_to.new_window("tab")
                 browser.driver.get(detail_url)
                 # 작업 수행
-                time.sleep(2)
+                time.sleep(TIME)
                 browser.driver.close()
                 browser.goToDefaultWindow()
 
@@ -118,11 +123,12 @@ def crawlOpenGoKr(
                 print("다음 페이지 없음, 순회 종료")
                 break
             prevEl = browser.getAllChild("css selector", "#infoList dt span.top a")[0]
+            curPageIdx += 1
             buttons[0].click()
             browser.waitStaleness(prevEl)
 
         browser.close()
-        time.sleep(5)
+        time.sleep(TIME)
 
     except Exception as e:
         print("에러 발생:", e)

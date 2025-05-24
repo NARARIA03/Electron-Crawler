@@ -4,7 +4,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from typing import Literal, List
+import base64
 import time
+from constants.index import TIME
+
 
 ByType = Literal[
     "id",
@@ -26,7 +29,7 @@ class Browser:
         print("웹드라이버 초기 설정 성공")
         self.driver.get(url)
         self.wait = WebDriverWait(self.driver, 10)
-        time.sleep(2)
+        time.sleep(TIME)
         self.curWindowHandle = self.driver.current_window_handle
         print("현재 페이지: ", self.driver.current_url)
 
@@ -98,3 +101,17 @@ class Browser:
 
     def waitStaleness(self, el: WebElement) -> None:
         self.wait.until(EC.staleness_of(el))
+
+    def fullScreenShot(self, fileName: str) -> None:
+        time.sleep(TIME)
+        # 화면 스크린샷 저장 (사이트 구현이 Iframe & POST method로 상세검색을 구현해둬서 상세검색 바로가기 url은 존재하지 X)
+        result = self.driver.execute_cdp_cmd(
+            "Page.captureScreenshot",
+            {"captureBeyondViewport": True, "fromSurface": True},
+        )
+        # base64 디코딩 후 파일 저장
+        with open(
+            f"{fileName}.png",
+            "wb",
+        ) as f:
+            f.write(base64.b64decode(result["data"]))
