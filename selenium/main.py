@@ -1,7 +1,5 @@
-from classes.Browser import Browser
 from services.openGoKr import crawlOpenGoKr
 from mocks.openGoKr import OPENGOKR_MOCKS
-import time
 
 
 if __name__ == "__main__":

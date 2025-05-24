@@ -1,13 +1,15 @@
 from classes.Browser import Browser
 import time
+import re
+from typing import Optional
 
 
 def crawlOpenGoKr(
     query: str,
     organization: str,
     location: str,
-    include: str,
-    exclude: str,
+    include: Optional[str],
+    exclude: Optional[str],
     startDate: str,
     endDate: str,
 ) -> None:
@@ -55,24 +57,69 @@ def crawlOpenGoKr(
         # 시작 날짜 종료 날짜 지정
         browser.typingInputElement("xpath", '//*[@id="startDate"]', startDate, True)
         browser.typingInputElement("xpath", '//*[@id="endDate"]', endDate, True)
+        # 검색어 포함/제한 존재하면 적용
+        if include:
+            browser.typingInputElement(
+                "xpath", '//*[@id="mustKeyword1"]', include, True
+            )
+        if exclude:
+            browser.typingInputElement(
+                "xpath", '//*[@id="ignoreKeyword1"]', exclude, True
+            )
         # 검색 버튼 클릭
         browser.clickElement("xpath", '//*[@id="popup_wrap"]/div[2]/div/div[3]/a[2]')
+        # iframe에서 나가기
+        browser.unfocusIframe()
+        time.sleep(3)
 
-        # 초기 윈도우로 이동 (리셋)
-        browser.goToDefaultWindow()
-        time.sleep(5)
-        # 원문 정보 크롤링을 위해 더보기 클릭
-        browser.clickElement("xpath", '//*[@id="info"]')
-        # 원문 정보 리스트로 가는 a태그 개수 확인
-        length = len(browser.getAllChild("css selector", "#infoList dt span.top a"))
-        if length == 0:
+        # 검색 결과가 하나라도 있으면, 더보기 버튼 클릭
+        count = browser.getElement("xpath", '//*[@id="totalPage"]').text
+        if count == "0":
+            print("검색 결과가 없습니다.")
             browser.close()
-        # 리스트 순회
-        for i in range(length):
-            link = browser.getAllChild("css selector", "#infoList dt span.top a")[i]
-            link.click()
-            time.sleep(5)
-            browser.driver.back()
+            return
+        browser.clickElement("xpath", '//*[@id="info"]')
+
+***REMOVED***
+***REMOVED***
+        while True:
+            # 원문 정보 리스트로 가는 a태그 개수 확인
+            length = len(browser.getAllChild("css selector", "#infoList dt span.top a"))
+            # 리스트 순회
+            for i in range(length):
+                href = (
+                    browser.getAllChild("css selector", "#infoList dt span.top a")[
+                        i
+                    ].get_attribute("href")
+                    or ""
+                )
+                # JS 함수를 역 파싱해서 쿼리파라미터 획득
+                m = re.search(r"goDetail\('([^']+)','([^']+)'", href)
+                if not m:
+                    continue
+                detail_url = (
+                    "https://www.open.go.kr/othicInfo/infoList/infoListDetl.do"
+                    f"?prdnNstRgstNo={m.group(1)}"
+                    f"&prdnDt={m.group(2)}"
+                )
+                browser.driver.switch_to.new_window("tab")
+                browser.driver.get(detail_url)
+                # 작업 수행
+                time.sleep(2)
+                browser.driver.close()
+                browser.goToDefaultWindow()
+
+            # 페이지네이션 순회
+            buttons = browser.driver.find_elements(
+                "xpath",
+                "//div[@id='pagingInfo']//li[@class='on']/following-sibling::li[1]/a",
+            )
+            if not buttons:
+                print("다음 페이지 없음, 순회 종료")
+                break
+            prevEl = browser.getAllChild("css selector", "#infoList dt span.top a")[0]
+            buttons[0].click()
+            browser.waitStaleness(prevEl)
 
         browser.close()
         time.sleep(5)

@@ -5,7 +5,7 @@ OPENGOKR_MOCKS = [
         "location": "서울특별시교육청",
         "include": "null",
         "exclude": "null",
-        "startDate": "2025-02-19",
+        "startDate": "2024-05-22",
         "endDate": "2025-05-22",
     },
     {
