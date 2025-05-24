@@ -39,11 +39,18 @@ class Browser:
         ).click()
         print("요소 클릭 완료")
 
-    def typingInputElement(self, by: ByType, value: str, input: str) -> None:
-        WebDriverWait(self.driver, 10).until(
+    def typingInputElement(
+        self, by: ByType, value: str, input: str, replace: bool = False
+    ) -> None:
+        element = WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((by, value))
-        ).send_keys(input)
-        print("입력 완료")
+        )
+        if replace:
+            element.clear()
+            element.send_keys(input)
+            return print("대체 완료")
+        element.send_keys(input)
+        return print("입력 완료")
 
     def focusIframe(self, by: ByType, value: str) -> None:
         WebDriverWait(self.driver, 10).until(

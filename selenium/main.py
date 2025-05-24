@@ -51,7 +51,20 @@ if __name__ == "__main__":
         )
         # 확인 버튼 클릭 (새 창 자동으로 닫힘)
         browser.clickElement("xpath", '//*[@id="popup_wrap"]/div[2]/div[2]/div[5]/a[1]')
+
+        # 초기 윈도우로 이동 (리셋)
         browser.goToDefaultWindow()
+        # iframe에 focus
+        browser.focusIframe("id", "modalIfm")
+        # 시작 날짜 종료 날짜 지정
+        browser.typingInputElement(
+            "xpath", '//*[@id="startDate"]', MOCK["startDate"], True
+        )
+        browser.typingInputElement("xpath", '//*[@id="endDate"]', MOCK["endDate"], True)
+
+        # 검색 버튼 클릭
+        browser.clickElement("xpath", '//*[@id="popup_wrap"]/div[2]/div/div[3]/a[2]')
+
         time.sleep(10)
 
     except Exception as e:
