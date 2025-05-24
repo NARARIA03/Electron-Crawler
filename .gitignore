@@ -1,0 +1,9 @@
+__pycache__
+build
+dist
+mycrawler.spec
+node_modules
+out
+.DS_Store
+.eslintcache
+*.log*
