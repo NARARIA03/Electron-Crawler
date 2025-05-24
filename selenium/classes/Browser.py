@@ -25,6 +25,7 @@ class Browser:
         self.driver = webdriver.Chrome(options=options)
         print("웹드라이버 초기 설정 성공")
         self.driver.get(url)
+        self.wait = WebDriverWait(self.driver, 10)
         time.sleep(2)
         self.curWindowHandle = self.driver.current_window_handle
         print("현재 페이지: ", self.driver.current_url)
@@ -32,6 +33,13 @@ class Browser:
     def close(self) -> None:
         self.driver.quit()
         print("웹드라이버 종료 완료")
+
+    def getElement(self, by: ByType, value: str) -> WebElement:
+        return (
+            WebDriverWait(self.driver, 10)
+            .until(EC.element_to_be_clickable((by, value)))
+            .find_element(by, value)
+        )
 
     def clickElement(self, by: ByType, value: str) -> None:
         WebDriverWait(self.driver, 10).until(
@@ -87,3 +95,6 @@ class Browser:
             EC.presence_of_all_elements_located((by, value))
         )
         return elements
+
+    def waitStaleness(self, el: WebElement) -> None:
+        self.wait.until(EC.staleness_of(el))
