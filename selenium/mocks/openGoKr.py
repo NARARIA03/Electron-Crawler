@@ -1,0 +1,38 @@
+OPENGOKR_MOCKS = [
+    {
+        "query": "전자칠판",
+        "organization": "서울서일초등학교",
+        "location": "서울특별시교육청",
+        "include": "null",
+        "exclude": "null",
+        "startDate": "2025-02-19",
+        "endDate": "2025-05-22",
+    },
+    {
+        "query": "인터랙티브화이트보드",
+        "organization": "서울서일초등학교",
+        "location": "서울특별시교육청",
+        "include": "null",
+        "exclude": "null",
+        "startDate": "2025-02-19",
+        "endDate": "2025-05-22",
+    },
+    {
+        "query": "전자칠판",
+        "organization": "신동중학교",
+        "location": "서울특별시교육청",
+        "include": "null",
+        "exclude": "null",
+        "startDate": "2025-02-19",
+        "endDate": "2025-05-22",
+    },
+    {
+        "query": "인터랙티브화이트보드",
+        "organization": "신동중학교",
+        "location": "서울특별시교육청",
+        "include": "null",
+        "exclude": "null",
+        "startDate": "2025-02-19",
+        "endDate": "2025-05-22",
+    },
+]
