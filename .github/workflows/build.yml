@@ -46,7 +46,7 @@ jobs:
           npm run build --win
 
       - name: Upload Windows installer
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2
         with:
           name: windows-build
           path: |
