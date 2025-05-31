@@ -1,0 +1,54 @@
+name: Build on Windows
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    env:
+      PYTHON_UNBUFFERED: 1
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Python 3.x
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Install Python dependencies
+        working-directory: ./backend
+        run: pip install -r requirements.txt
+
+      - name: Run PyInstaller
+        working-directory: ./backend
+        run: |
+          pyinstaller --onefile --name script --distpath ../frontend/resources src/main.py
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.x"
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: |
+          npm ci
+
+      - name: Build Electron (Windows)
+        working-directory: ./frontend
+        run: |
+          npm run build --win
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows-build
+          path: |
+            frontend/dist/*.exe
+            frontend/dist/*.msi

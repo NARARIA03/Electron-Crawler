@@ -46,6 +46,9 @@
 
   "build": {
     "asar": true,
+    "win": {
+      "target": ["nsis", "portable"]
+    },
     "files": [
       "dist/**/*",
       "dist-electron/**/*",
