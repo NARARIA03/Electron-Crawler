@@ -23,15 +23,17 @@ def main():
         print("--data 파라미터 이슈")
         sys.exit(1)
 
+    result = {"configs": configs, "type": args.type, "status": "success"}
+
     if args.type == "open-go-kr":
         print(configs, args.type)
-        return
+        # TODO
     elif args.type == "nara-g2b-portal":
         print(configs, args.type)
-        return
+        # TODO
     else:
         print(configs, args.type)
-        return
+        # TODO
 
 
 if __name__ == "__main__":
