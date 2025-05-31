@@ -85,9 +85,18 @@ app.whenReady().then(() => {
       ? path.join(process.resourcesPath, "resources", exeName)
       : path.join(__dirname, "..", "resources", exeName);
 
-    console.log("▶︎ [run-python] exePath:", exePath);
+    // 파일 다운로드 디렉토리 연결
+    const base = app.isPackaged ? process.resourcesPath : __dirname;
+    const downloadDir = path.join(base, "downloads");
 
-    const child = spawn(exePath, ["--type", args.type, "--data", JSON.stringify(args.data)]);
+    const child = spawn(exePath, [
+      "--type",
+      args.type,
+      "--downloadDir",
+      downloadDir,
+      "--data",
+      JSON.stringify(args.data),
+    ]);
 
     let stdoutData = "";
     let stderrData = "";
