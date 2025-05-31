@@ -11,11 +11,13 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--type", choices=TYPE, required=True)
+    parser.add_argument("--downloadDir", required=True)
     parser.add_argument("--data", type=str, required=True)
     args = parser.parse_args()
 
     try:
         configs = json.loads(args.data)
+        downloadDir = args.downloadDir
     except json.JSONDecodeError:
         print("--data 파라미터 이슈")
         sys.exit(1)
@@ -26,13 +28,13 @@ def main():
     result = {"configs": configs, "type": args.type, "status": "success"}
 
     if args.type == "open-go-kr":
-        print(configs, args.type)
+        print(configs, downloadDir, args.type)
         # TODO
     elif args.type == "nara-g2b-portal":
-        print(configs, args.type)
+        print(configs, downloadDir, args.type)
         # TODO
     else:
-        print(configs, args.type)
+        print(configs, downloadDir, args.type)
         # TODO
 
 
