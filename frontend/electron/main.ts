@@ -1,9 +1,16 @@
-import { app, BrowserWindow } from "electron";
-import { createRequire } from "node:module";
+import { app, BrowserWindow, ipcMain } from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { spawn } from "node:child_process";
 
-const require = createRequire(import.meta.url);
+const RUN_PYTHON_PROCESS = "run-python";
+const PYTHON_RESULT_PROCESS = "python-result";
+const PROCESS_NAME = {
+  win: "script.exe",
+  mac: "script",
+};
+
+// const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // The built directory structure
@@ -28,9 +35,10 @@ let win: BrowserWindow | null;
 
 function createWindow() {
   win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
+    icon: path.join(process.env.VITE_PUBLIC, "vite.svg"),
     webPreferences: {
       preload: path.join(__dirname, "preload.mjs"),
+      devTools: true,
     },
   });
 
@@ -42,7 +50,6 @@ function createWindow() {
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL);
   } else {
-    // win.loadFile('dist/index.html')
     win.loadFile(path.join(RENDERER_DIST, "index.html"));
   }
 }
@@ -65,4 +72,39 @@ app.on("activate", () => {
   }
 });
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+
+  ipcMain.on(RUN_PYTHON_PROCESS, (event, args: { type: string; data: any[] }) => {
+    console.log("▶︎ app.isPackaged:", app.isPackaged);
+    // 실행 파일 이름
+    const exeName = process.platform === "win32" ? PROCESS_NAME.win : PROCESS_NAME.mac;
+    // 개발 모드: frontend/resources/script
+    // 빌드 모드: Contents/Resources/resources/script
+    const exePath = app.isPackaged
+      ? path.join(process.resourcesPath, "resources", exeName)
+      : path.join(__dirname, "..", "resources", exeName);
+
+    console.log("▶︎ [run-python] exePath:", exePath);
+
+    const child = spawn(exePath, ["--type", args.type, "--data", JSON.stringify(args.data)]);
+
+    let stdoutData = "";
+    let stderrData = "";
+
+    child.stdout.on("data", (chunk: Buffer) => {
+      stdoutData += chunk.toString();
+    });
+    child.stderr.on("data", (chunk: Buffer) => {
+      stderrData += chunk.toString();
+      console.error(`[python stderr] ${chunk.toString()}`);
+    });
+    child.on("close", (code: number) => {
+      event.reply(PYTHON_RESULT_PROCESS, {
+        exitCode: code,
+        stdout: stdoutData.trim(),
+        stderr: stderrData.trim(),
+      });
+    });
+  });
+});
