@@ -74,12 +74,12 @@ def crawlOpenGoKr(
         time.sleep(TIME)
 
         # 검색 결과가 하나라도 있으면, 더보기 버튼 클릭
-        count = browser.getElement("xpath", '//*[@id="totalPage"]').text
+        count = browser.getElement("xpath", '//*[@id="searchInfoListTotalPage"]').text
         if count == "0":
             print("검색 결과가 없습니다.")
             browser.close()
             return
-        browser.clickElement("xpath", '//*[@id="info"]')
+        browser.clickElement("xpath", '//*[@id="infoList"]')
 
         # 페이지네이션이 쿼리파라미터로 안 되어있는건.. 무슨 심보냐 진짜
         # 새 탭 열기로 해결해보자
@@ -88,7 +88,7 @@ def crawlOpenGoKr(
             browser.fullScreenShot(
                 f"{query}_{organization}_{location}_{startDate}_{endDate}_{curPageIdx}"
             )
-            # 원문 정보 리스트로 가는 a태그 개수 확인
+            # 정보 목록 리스트로 가는 a태그 개수 확인
             length = len(browser.getAllChild("css selector", "#infoList dt span.top a"))
             # 리스트 순회
             for i in range(length):
