@@ -6,7 +6,7 @@ from constants.index import TIME
 
 
 def crawlOpenGoKr(
-    browser: Selenium,
+    downloadDir: str,
     query: str,
     organization: str,
     location: str,
@@ -16,6 +16,7 @@ def crawlOpenGoKr(
     exclude: Optional[str] = None,
 ) -> None:
     try:
+        browser = Selenium("https://www.open.go.kr/com/main/mainView.do", downloadDir)
         # 검색어 입력
         browser.typingInputElement("xpath", '//*[@id="m_input"]', query)
         # 검색 버튼 클릭

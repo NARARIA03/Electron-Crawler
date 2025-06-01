@@ -1,6 +1,5 @@
 import argparse
 import sys, json
-from classes.Selenium import Selenium
 from services.openGoKr import crawlOpenGoKr
 
 TYPE = ["open-go-kr", "nara-g2b-portal", "computime-alert"]
@@ -19,7 +18,6 @@ def main():
 
     try:
         configs = json.loads(args.data)
-        downloadDir = args.downloadDir
     except json.JSONDecodeError:
         print("--data 파라미터 이슈", flush=True)
         sys.exit(1)
@@ -28,16 +26,16 @@ def main():
         sys.exit(1)
 
     if args.type == "open-go-kr":
-        selenium = Selenium("https://www.open.go.kr/com/main/mainView.do", downloadDir)
         for cfg in configs:
-            crawlOpenGoKr(browser=selenium, **cfg)
+            downloadDir = args.downloadDir
+            crawlOpenGoKr(downloadDir, **cfg)
 
         # TODO
     elif args.type == "nara-g2b-portal":
-        print(configs, downloadDir, args.type, flush=True)
+        print(configs, args.type, flush=True)
         # TODO
     else:
-        print(configs, downloadDir, args.type, flush=True)
+        print(configs, args.type, flush=True)
         # TODO
 
 
