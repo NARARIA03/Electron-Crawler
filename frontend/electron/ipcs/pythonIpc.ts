@@ -1,10 +1,13 @@
-import { PROCESS_NAME, PYTHON_RESULT_PROCESS, RUN_PYTHON_PROCESS } from "../../src/constants/ipc";
+import { PROCESS_NAME, PYTHON } from "../../src/constants/ipc";
 import { app, ipcMain } from "electron";
 import { spawn } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import path from "node:path";
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 export const pythonIpc = () => {
-  ipcMain.on(RUN_PYTHON_PROCESS, (event, args: { type: string; data: any[]; downloadDir: string | null }) => {
+  ipcMain.on(PYTHON.run, (event, args: { type: string; data: any[]; downloadDir: string | null }) => {
     console.log("▶︎ app.isPackaged:", app.isPackaged);
     // 실행 파일 이름
     const exeName = process.platform === "win32" ? PROCESS_NAME.win : PROCESS_NAME.mac;
@@ -30,22 +33,18 @@ export const pythonIpc = () => {
       JSON.stringify(args.data),
     ]);
 
-    let stdoutData = "";
-    let stderrData = "";
-
     child.stdout.on("data", (chunk: Buffer) => {
-      stdoutData += chunk.toString();
+      const text = chunk.toString();
+      event.reply(PYTHON.stdout, text);
     });
+
     child.stderr.on("data", (chunk: Buffer) => {
-      stderrData += chunk.toString();
-      console.error(`[python stderr] ${chunk.toString()}`);
+      const text = chunk.toString();
+      event.reply(PYTHON.stderr, text);
     });
+
     child.on("close", (code: number) => {
-      event.reply(PYTHON_RESULT_PROCESS, {
-        exitCode: code,
-        stdout: stdoutData.trim(),
-        stderr: stderrData.trim(),
-      });
+      event.reply(PYTHON.result, { exitCode: code });
     });
   });
 };
