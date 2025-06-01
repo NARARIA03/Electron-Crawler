@@ -16,7 +16,10 @@ def crawlOpenGoKr(
 ) -> None:
     try:
         # 사이트 접속
-        browser = Browser("https://www.open.go.kr/com/main/mainView.do")
+        browser = Browser(
+            "https://www.open.go.kr/com/main/mainView.do",
+            "/Users/hyunseong/Desktop/crawling-proj/code/selenium",
+        )
         # 검색어 입력
         browser.typingInputElement("xpath", '//*[@id="m_input"]', query)
         # 검색 버튼 클릭
@@ -109,8 +112,18 @@ def crawlOpenGoKr(
                 )
                 browser.driver.switch_to.new_window("tab")
                 browser.driver.get(detail_url)
-                # 작업 수행
-                time.sleep(TIME)
+                # 문서 제목 저장
+                title = browser.getElement("xpath", '//*[@id="infoSj"]/p/strong').text
+                print(title)
+                # 다운로드 로직 실행
+                browser.downloadOpenGoKr(
+                    "xpath",
+                    (
+                        "//td[starts-with(@headers,'본문_') or starts-with(@headers,'붙임_')]"
+                        "//a[contains(@class,'btn_type05') and contains(@class,'down')][1]"
+                    ),
+                )
+
                 browser.driver.close()
                 browser.goToDefaultWindow()
 
