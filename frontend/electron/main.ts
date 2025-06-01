@@ -1,14 +1,7 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow } from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { spawn } from "node:child_process";
-
-const RUN_PYTHON_PROCESS = "run-python";
-const PYTHON_RESULT_PROCESS = "python-result";
-const PROCESS_NAME = {
-  win: "script.exe",
-  mac: "script",
-};
+import { downloadDirIpc, pythonIpc } from "./ipcs";
 
 // const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -74,46 +67,6 @@ app.on("activate", () => {
 
 app.whenReady().then(() => {
   createWindow();
-
-  ipcMain.on(RUN_PYTHON_PROCESS, (event, args: { type: string; data: any[] }) => {
-    console.log("▶︎ app.isPackaged:", app.isPackaged);
-    // 실행 파일 이름
-    const exeName = process.platform === "win32" ? PROCESS_NAME.win : PROCESS_NAME.mac;
-    // 개발 모드: frontend/resources/script
-    // 빌드 모드: Contents/Resources/resources/script
-    const exePath = app.isPackaged
-      ? path.join(process.resourcesPath, "resources", exeName)
-      : path.join(__dirname, "..", "resources", exeName);
-
-    // 파일 다운로드 디렉토리 연결
-    const base = app.isPackaged ? process.resourcesPath : __dirname;
-    const downloadDir = path.join(base, "downloads");
-
-    const child = spawn(exePath, [
-      "--type",
-      args.type,
-      "--downloadDir",
-      downloadDir,
-      "--data",
-      JSON.stringify(args.data),
-    ]);
-
-    let stdoutData = "";
-    let stderrData = "";
-
-    child.stdout.on("data", (chunk: Buffer) => {
-      stdoutData += chunk.toString();
-    });
-    child.stderr.on("data", (chunk: Buffer) => {
-      stderrData += chunk.toString();
-      console.error(`[python stderr] ${chunk.toString()}`);
-    });
-    child.on("close", (code: number) => {
-      event.reply(PYTHON_RESULT_PROCESS, {
-        exitCode: code,
-        stdout: stdoutData.trim(),
-        stderr: stderrData.trim(),
-      });
-    });
-  });
+  downloadDirIpc();
+  pythonIpc();
 });
