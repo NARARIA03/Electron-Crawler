@@ -1,16 +1,27 @@
 import { Button, H1 } from "@/components";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { getDownloadDirectory, setDownloadDirectory } from "@/lib/localstorage";
+import { PYTHON_RESULT_PROCESS, RUN_PYTHON_PROCESS, SELECT_DIRECTORY } from "@/constants/ipc";
 
 export const OpenGoKrContainer = () => {
   const navigate = useNavigate();
 
   const goToBack = () => navigate(-1);
 
+  const handleDirectoryChange = async () => {
+    const dir = (await window.ipcRenderer.invoke(SELECT_DIRECTORY)) as string | null;
+    if (!dir) return;
+    console.log(dir);
+    setDownloadDirectory(dir);
+  };
+
   const handleTestStart = () => {
     console.log("🔔 handleTestStart 호출");
-    window.ipcRenderer.send("run-python", {
+    const downloadDir = getDownloadDirectory();
+    window.ipcRenderer.send(RUN_PYTHON_PROCESS, {
       type: "open-go-kr",
+      downloadDir,
       data: [
         {
           query: "전자칠판",
@@ -24,7 +35,7 @@ export const OpenGoKrContainer = () => {
   };
 
   useEffect(() => {
-    window.ipcRenderer.on("python-result", (_event, result) => {
+    window.ipcRenderer.on(PYTHON_RESULT_PROCESS, (_event, result) => {
       const { exitCode, stdout, stderr } = result;
       if (exitCode === 0) {
         console.log("수집 성공:", stdout);
@@ -34,7 +45,7 @@ export const OpenGoKrContainer = () => {
     });
 
     return () => {
-      window.ipcRenderer.off("python-result", () => {});
+      window.ipcRenderer.off(PYTHON_RESULT_PROCESS, () => {});
     };
   }, []);
 
@@ -43,6 +54,9 @@ export const OpenGoKrContainer = () => {
       <H1>정보공개포털 페이지</H1>
       <Button variant="secondary" size="lg" onClick={goToBack}>
         뒤로가기
+      </Button>
+      <Button variant="secondary" size="lg" onClick={handleDirectoryChange}>
+        다운로드 경로 변경
       </Button>
       <Button variant="secondary" size="lg" onClick={handleTestStart}>
         데이터 수집 시작
