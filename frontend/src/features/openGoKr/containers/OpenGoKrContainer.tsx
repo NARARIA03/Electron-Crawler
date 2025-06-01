@@ -2,7 +2,7 @@ import { Button, H1 } from "@/components";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getDownloadDirectory, setDownloadDirectory } from "@/lib/localstorage";
-import { PYTHON_RESULT_PROCESS, RUN_PYTHON_PROCESS, SELECT_DIRECTORY } from "@/constants/ipc";
+import { PYTHON, SELECT_DIRECTORY } from "@/constants/ipc";
 
 export const OpenGoKrContainer = () => {
   const navigate = useNavigate();
@@ -19,7 +19,7 @@ export const OpenGoKrContainer = () => {
   const handleTestStart = () => {
     console.log("🔔 handleTestStart 호출");
     const downloadDir = getDownloadDirectory();
-    window.ipcRenderer.send(RUN_PYTHON_PROCESS, {
+    window.ipcRenderer.send(PYTHON.run, {
       type: "open-go-kr",
       downloadDir,
       data: [
@@ -35,17 +35,24 @@ export const OpenGoKrContainer = () => {
   };
 
   useEffect(() => {
-    window.ipcRenderer.on(PYTHON_RESULT_PROCESS, (_event, result) => {
-      const { exitCode, stdout, stderr } = result;
-      if (exitCode === 0) {
-        console.log("수집 성공:", stdout);
-      } else {
-        console.error("수집 실패:", stderr || stdout);
-      }
-    });
+    const onStdout = (_: Electron.IpcRendererEvent, text: string) => {
+      console.log("stdout:", text);
+    };
+    const onStderr = (_: Electron.IpcRendererEvent, text: string) => {
+      console.error("stderr:", text);
+    };
+    const onResult = (_: Electron.IpcRendererEvent, result: { exitCode: number }) => {
+      console.log("exitCode:", result.exitCode);
+    };
+
+    window.ipcRenderer.on(PYTHON.stdout, onStdout);
+    window.ipcRenderer.on(PYTHON.stderr, onStderr);
+    window.ipcRenderer.on(PYTHON.result, onResult);
 
     return () => {
-      window.ipcRenderer.off(PYTHON_RESULT_PROCESS, () => {});
+      window.ipcRenderer.off(PYTHON.stdout, onStdout);
+      window.ipcRenderer.off(PYTHON.stderr, onStderr);
+      window.ipcRenderer.off(PYTHON.result, onResult);
     };
   }, []);
 

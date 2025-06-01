@@ -19,19 +19,19 @@ class Selenium:
         }
 
         options = Options()
-        options.add_argument("--headless")
+        # options.add_argument("--headless")
         options.add_experimental_option("prefs", prefs)
         self.driver = webdriver.Chrome(options=options)
-        print("웹드라이버 초기 설정 성공")
+        print("웹드라이버 초기 설정 성공", flush=True)
         self.driver.get(url)
         self.wait = WebDriverWait(self.driver, 10)
         time.sleep(TIME)
         self.curWindowHandle = self.driver.current_window_handle
-        print("현재 페이지: ", self.driver.current_url)
+        print("현재 페이지: ", self.driver.current_url, flush=True)
 
     def close(self) -> None:
         self.driver.quit()
-        print("웹드라이버 종료 완료")
+        print("웹드라이버 종료 완료", flush=True)
 
     def getElement(self, by: ByType, value: str) -> WebElement:
         return (
@@ -44,7 +44,7 @@ class Selenium:
         WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((by, value))
         ).click()
-        print("요소 클릭 완료")
+        print("요소 클릭 완료", flush=True)
 
     def typingInputElement(
         self, by: ByType, value: str, input: str, replace: bool = False
@@ -55,19 +55,19 @@ class Selenium:
         if replace:
             element.clear()
             element.send_keys(input)
-            return print("대체 완료")
+            return print("대체 완료", flush=True)
         element.send_keys(input)
-        return print("입력 완료")
+        return print("입력 완료", flush=True)
 
     def focusIframe(self, by: ByType, value: str) -> None:
         WebDriverWait(self.driver, 10).until(
             EC.frame_to_be_available_and_switch_to_it((by, value))
         )
-        print("iframe 전환 완료")
+        print("iframe 전환 완료", flush=True)
 
     def unfocusIframe(self) -> None:
         self.driver.switch_to.default_content()
-        print("기본 컨텐츠로 전환 완료")
+        print("기본 컨텐츠로 전환 완료", flush=True)
 
     def goToNewWindow(self, by: ByType, value: str) -> None:
         originalHandles = set(self.driver.window_handles)
@@ -83,11 +83,11 @@ class Selenium:
             raise RuntimeError("새 창 전환 실패: 새로운 윈도우를 찾을 수 없습니다")
 
         self.driver.switch_to.window(newHandle.pop())
-        print("새 윈도우로 전환 완료")
+        print("새 윈도우로 전환 완료", flush=True)
 
     def goToDefaultWindow(self) -> None:
         self.driver.switch_to.window(self.curWindowHandle)
-        print("초기 윈도우로 이동 완료")
+        print("초기 윈도우로 이동 완료", flush=True)
 
     def getAllChild(self, by: ByType, value: str) -> List[WebElement]:
         elements = WebDriverWait(self.driver, 10).until(
