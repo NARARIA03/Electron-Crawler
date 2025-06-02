@@ -1,4 +1,5 @@
 from classes.Browser import Browser
+from classes.Excel import ExcelHelper
 import time
 import re
 from typing import Optional
@@ -20,6 +21,13 @@ def crawlOpenGoKr(
             "https://www.open.go.kr/com/main/mainView.do",
             "/Users/hyunseong/Desktop/crawling-proj/code/selenium",
         )
+        # 엑셀 파일 로드 혹은 데이터 생성
+        excel = ExcelHelper(
+            "/Users/hyunseong/Desktop/crawling-proj/code/selenium",
+            f"{query}_{organization}.xlsx",
+        )
+        excel.initializeOpenGoKr()
+
         # 검색어 입력
         browser.typingInputElement("xpath", '//*[@id="m_input"]', query)
         # 검색 버튼 클릭
@@ -87,10 +95,13 @@ def crawlOpenGoKr(
         # 페이지네이션이 쿼리파라미터로 안 되어있는건.. 무슨 심보냐 진짜
         # 새 탭 열기로 해결해보자
         curPageIdx = 1
+        curRow = 2
+        screenshotPaths = []
         while True:
-            browser.fullScreenShot(
+            screenshotPath = browser.fullScreenShot(
                 f"{query}_{organization}_{location}_{startDate}_{endDate}_{curPageIdx}"
             )
+            screenshotPaths.append(screenshotPath)
             # 정보 목록 리스트로 가는 a태그 개수 확인
             length = len(browser.getAllChild("css selector", "#infoList dt span.top a"))
             # 리스트 순회
@@ -114,9 +125,8 @@ def crawlOpenGoKr(
                 browser.driver.get(detail_url)
                 # 문서 제목 저장
                 title = browser.getElement("xpath", '//*[@id="infoSj"]/p/strong').text
-                print(title)
                 # 다운로드 로직 실행
-                browser.downloadOpenGoKr(
+                fileLinks = browser.downloadOpenGoKr(
                     "xpath",
                     (
                         "//td[starts-with(@headers,'본문_') or starts-with(@headers,'붙임_')]"
@@ -124,6 +134,13 @@ def crawlOpenGoKr(
                     ),
                 )
 
+                # 엑셀에 값 추가
+                excel.setData(curRow, 1, query)
+                excel.setData(curRow, 2, organization)
+                excel.setData(curRow, 3, title)
+                for i in range(0, len(fileLinks)):
+                    excel.setHyperlink(curRow, 4 + i, fileLinks[i])
+                curRow += 1
                 browser.driver.close()
                 browser.goToDefaultWindow()
 
@@ -139,8 +156,9 @@ def crawlOpenGoKr(
             curPageIdx += 1
             buttons[0].click()
             browser.waitStaleness(prevEl)
-
         browser.close()
+        excel.insertImage(screenshotPaths)
+        excel.save()
         time.sleep(TIME)
 
     except Exception as e:
