@@ -30,7 +30,6 @@ def main():
             downloadDir = args.downloadDir
             crawlOpenGoKr(downloadDir, **cfg)
 
-        # TODO
     elif args.type == "nara-g2b-portal":
         print(configs, args.type, flush=True)
         # TODO
