@@ -1,5 +1,7 @@
 import argparse
 import sys, json
+import datetime
+import os
 from services.openGoKr import crawlOpenGoKr
 
 TYPE = ["open-go-kr", "nara-g2b-portal", "computime-alert"]
@@ -26,9 +28,12 @@ def main():
         sys.exit(1)
 
     if args.type == "open-go-kr":
+        today = datetime.date.today()
+        dateDir = f"{today.year}_{today.month:02d}_{today.day:02d}"
+        downloadDir = os.path.join(args.downloadDir, dateDir)
         for cfg in configs:
-            downloadDir = args.downloadDir
             crawlOpenGoKr(downloadDir, **cfg)
+        print(f"DIRECTORY:{downloadDir}", flush=True)
 
     elif args.type == "nara-g2b-portal":
         print(configs, args.type, flush=True)
