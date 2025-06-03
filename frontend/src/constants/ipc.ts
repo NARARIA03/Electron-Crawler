@@ -9,3 +9,5 @@ export const PYTHON = {
   stdout: "python-stdout",
   stderr: "python-stderr",
 };
+
+export const OPEN_FINDER = "open-finder";

@@ -8,17 +8,14 @@ from typing import List
 import os
 import base64
 import time
-import datetime
 import glob
 from constants.index import TIME, ByType
 
 
 class Selenium:
     def __init__(self, url: str, downloadDir: str) -> None:
-        today = datetime.date.today()
-        dateDir = f"{today.year}_{today.month:02d}_{today.day:02d}"
-        filesDir = os.path.join(downloadDir, dateDir, "files")
-        imagesDir = os.path.join(downloadDir, dateDir, "images")
+        filesDir = os.path.join(downloadDir, "files")
+        imagesDir = os.path.join(downloadDir, "images")
         os.makedirs(filesDir, exist_ok=True)
         os.makedirs(imagesDir, exist_ok=True)
 
@@ -30,7 +27,7 @@ class Selenium:
         }
 
         options = Options()
-        # options.add_argument("--headless")
+        options.add_argument("--headless")
         options.add_experimental_option("prefs", prefs)
         self.driver = webdriver.Chrome(options=options)
         print("웹드라이버 초기 설정 성공", flush=True)

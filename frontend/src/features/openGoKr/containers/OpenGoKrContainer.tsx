@@ -1,11 +1,14 @@
-import { Button, H1 } from "@/components";
-import { useEffect } from "react";
+import { Button, H1, Alert, ModalRoot, Loading } from "@/components";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getDownloadDirectory, setDownloadDirectory } from "@/lib/localstorage";
-import { PYTHON, SELECT_DIRECTORY } from "@/constants/ipc";
+import { OPEN_FINDER, PYTHON, SELECT_DIRECTORY } from "@/constants/ipc";
+import { toast } from "sonner";
 
 export const OpenGoKrContainer = () => {
   const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [stdOut, setStdOut] = useState<string>("");
 
   const goToBack = () => navigate(-1);
 
@@ -19,6 +22,7 @@ export const OpenGoKrContainer = () => {
   const handleTestStart = () => {
     console.log("🔔 handleTestStart 호출");
     const downloadDir = getDownloadDirectory();
+    setIsOpen(true);
     window.ipcRenderer.send(PYTHON.run, {
       type: "open-go-kr",
       downloadDir,
@@ -36,13 +40,23 @@ export const OpenGoKrContainer = () => {
 
   useEffect(() => {
     const onStdout = (_: Electron.IpcRendererEvent, text: string) => {
-      console.log("stdout:", text);
+      console.log("⏺ stdout 수신:", JSON.stringify(text));
+      setStdOut(text);
+      const match = text.match(/DIRECTORY:(.+)/);
+      if (match && match[1]) {
+        const folderDir = match[1].trim();
+        window.ipcRenderer.send(OPEN_FINDER, folderDir);
+      }
     };
     const onStderr = (_: Electron.IpcRendererEvent, text: string) => {
       console.error("stderr:", text);
+      setStdOut(text);
     };
     const onResult = (_: Electron.IpcRendererEvent, result: { exitCode: number }) => {
       console.log("exitCode:", result.exitCode);
+      setIsOpen(false);
+      toast.success("작업이 완료되었습니다");
+      setStdOut("");
     };
 
     window.ipcRenderer.on(PYTHON.stdout, onStdout);
@@ -59,15 +73,24 @@ export const OpenGoKrContainer = () => {
   return (
     <>
       <H1>정보공개포털 페이지</H1>
-      <Button variant="secondary" size="lg" onClick={goToBack}>
-        뒤로가기
-      </Button>
-      <Button variant="secondary" size="lg" onClick={handleDirectoryChange}>
-        다운로드 경로 변경
-      </Button>
-      <Button variant="secondary" size="lg" onClick={handleTestStart}>
-        데이터 수집 시작
-      </Button>
+      <div className="flex gap-24">
+        <Button variant="secondary" size="lg" onClick={goToBack}>
+          뒤로가기
+        </Button>
+        <Button variant="secondary" size="lg" onClick={handleDirectoryChange}>
+          다운로드 경로 변경
+        </Button>
+        <Button variant="secondary" size="lg" onClick={handleTestStart}>
+          데이터 수집 시작
+        </Button>
+      </div>
+      <ModalRoot isOpen={isOpen}>
+        <Loading />
+        <Alert className="w-fit absolute right-4 bottom-4">
+          <Alert.Title>작업중...</Alert.Title>
+          <Alert.Description className="text-xs">{stdOut}</Alert.Description>
+        </Alert>
+      </ModalRoot>
     </>
   );
 };

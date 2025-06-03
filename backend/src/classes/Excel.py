@@ -12,9 +12,7 @@ class ExcelHelper:
     wb: Workbook
 
     def __init__(self, downloadDir: str, fileName: str, sheetName: str = "Sheet1"):
-        today = datetime.date.today()
-        dateDir = f"{today.year}_{today.month:02d}_{today.day:02d}"
-        self.path = os.path.join(downloadDir, dateDir, fileName)
+        self.path = os.path.join(downloadDir, fileName)
         self.wb = Workbook()
         activeWs = self.wb.active
         assert isinstance(activeWs, Worksheet)
