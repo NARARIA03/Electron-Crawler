@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { getDownloadDirectory, setDownloadDirectory } from "@/lib/localstorage";
 import { OPEN_FINDER, PYTHON, SELECT_DIRECTORY } from "@/constants/ipc";
 import { toast } from "sonner";
+import type { IpcRendererEvent } from "electron";
 
 export const OpenGoKrContainer = () => {
   const navigate = useNavigate();
@@ -39,7 +40,7 @@ export const OpenGoKrContainer = () => {
   };
 
   useEffect(() => {
-    const onStdout = (_: Electron.IpcRendererEvent, text: string) => {
+    const onStdout = (_: IpcRendererEvent, text: string) => {
       console.log("⏺ stdout 수신:", JSON.stringify(text));
       setStdOut(text);
       const match = text.match(/DIRECTORY:(.+)/);
@@ -48,11 +49,11 @@ export const OpenGoKrContainer = () => {
         window.ipcRenderer.send(OPEN_FINDER, folderDir);
       }
     };
-    const onStderr = (_: Electron.IpcRendererEvent, text: string) => {
+    const onStderr = (_: IpcRendererEvent, text: string) => {
       console.error("stderr:", text);
       setStdOut(text);
     };
-    const onResult = (_: Electron.IpcRendererEvent, result: { exitCode: number }) => {
+    const onResult = (_: IpcRendererEvent, result: { exitCode: number }) => {
       console.log("exitCode:", result.exitCode);
       setIsOpen(false);
       toast.success("작업이 완료되었습니다");
