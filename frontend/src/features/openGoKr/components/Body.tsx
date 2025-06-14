@@ -6,7 +6,7 @@ import { parseExcelQuery } from "../utils";
 import { toast } from "sonner";
 
 export const Body = () => {
-  const [query, setQuery] = useState<any[] | null>(null);
+  const [query, setQuery] = useState<unknown[] | null>(null);
   const [scheduledTime, setScheduledTime] = useState<string | undefined>(undefined);
 
   const { isLoading, log, handleStartIPC } = useIPC("open-go-kr");

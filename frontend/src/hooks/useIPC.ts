@@ -8,7 +8,7 @@ export const useIPC = (type: "open-go-kr" | "nara-g2b-portal" | "computime-alert
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [log, setLog] = useState<string>("");
 
-  const handleStartIPC = (data: any[], scheduledTime?: string) => {
+  const handleStartIPC = (data: unknown[], scheduledTime?: string) => {
     if (isLoading) return;
 
     const downloadDir = getDownloadDirectory();
