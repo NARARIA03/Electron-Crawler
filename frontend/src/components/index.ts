@@ -5,3 +5,4 @@ export * from "./ui/alert";
 export * from "./ui/Modal";
 export * from "./ui/Loading";
 export * from "./ui/input";
+export * from "./ui/table";
