@@ -8,23 +8,26 @@ export const useIPC = (type: "open-go-kr" | "nara-g2b-portal" | "computime-alert
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [log, setLog] = useState<string>("");
 
-  const handleStartIPC = (data: any[]) => {
+  const handleStartIPC = (data: any[], scheduledTime?: string) => {
     if (isLoading) return;
 
     const downloadDir = getDownloadDirectory();
     const excelName = getExcelName();
-    setIsLoading(true);
+    if (!scheduledTime) setIsLoading(true);
+
     window.ipcRenderer.send(PYTHON.run, {
       type,
       data,
       downloadDir,
       excelName,
+      scheduledTime,
     });
   };
 
   useEffect(() => {
     const onStdout = (_: IpcRendererEvent, text: string) => {
-      console.log("⏺ stdout 수신:", JSON.stringify(text));
+      setIsLoading(true);
+      console.log("stdout 수신:", JSON.stringify(text));
       setLog(text);
       const match = text.match(/DIRECTORY:(.+)/);
       if (match && match[1]) {
@@ -32,10 +35,12 @@ export const useIPC = (type: "open-go-kr" | "nara-g2b-portal" | "computime-alert
         window.ipcRenderer.send(OPEN_FINDER, folderDir);
       }
     };
+
     const onStderr = (_: IpcRendererEvent, text: string) => {
       console.error("stderr:", text);
       setLog(text);
     };
+
     const onResult = (_: IpcRendererEvent, result: { exitCode: number }) => {
       console.log("exitCode:", result.exitCode);
       setIsLoading(false);
