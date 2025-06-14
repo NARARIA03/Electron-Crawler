@@ -7,10 +7,10 @@ import { toast } from "sonner";
 export const useIPC = (type: "open-go-kr" | "nara-g2b-portal" | "computime-alert") => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [log, setLog] = useState<string>("");
-  const downloadDir = getDownloadDirectory();
-  const excelName = getExcelName();
 
   const handleStartIPC = (data: any[]) => {
+    const downloadDir = getDownloadDirectory();
+    const excelName = getExcelName();
     setIsLoading(true);
     window.ipcRenderer.send(PYTHON.run, {
       type,
