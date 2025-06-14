@@ -16,7 +16,7 @@ export const H1 = (props: HeadingProps) => {
 export const H2 = (props: HeadingProps) => {
   return (
     <h2
-      className="scroll-m-20 text-zinc-800 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0 pointer-events-none select-none"
+      className="scroll-m-20 text-zinc-800 pb-2 text-2xl font-semibold tracking-tight first:mt-0 pointer-events-none select-none"
       {...props}
     />
   );

@@ -75,7 +75,7 @@ export const SettingModal = ({ isOpen, onClose }: Props) => {
             </div>
           </div>
           <div className="mb-8">
-            <p className="text-zinc-600 mb-2 select-none">xlsx 파일명:</p>
+            <p className="text-zinc-600 mb-2 select-none">저장될 xlsx 파일명:</p>
             <Input
               className="h-10 rounded-lg border border-zinc-700 select-none cursor-pointer hover:bg-zinc-200"
               placeholder="database.xlsx 처럼 입력해주세요"
