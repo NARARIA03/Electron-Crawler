@@ -13,13 +13,13 @@ export const LandingPage = () => {
     <>
       <H1>크롤링 서비스 (Beta)</H1>
       <div className="flex justify-center items-center gap-24">
-        <Button variant="secondary" size="lg" onClick={onOpenGoKrClick}>
+        <Button size="lg" onClick={onOpenGoKrClick}>
           <Paragraph>정보공개포털</Paragraph>
         </Button>
-        <Button variant="secondary" size="lg" onClick={handleNotImplementedClick}>
+        <Button size="lg" onClick={handleNotImplementedClick}>
           <Paragraph>컴시간알리미</Paragraph>
         </Button>
-        <Button variant="secondary" size="lg" onClick={handleNotImplementedClick}>
+        <Button size="lg" onClick={handleNotImplementedClick}>
           <Paragraph>나라장터</Paragraph>
         </Button>
       </div>

@@ -10,7 +10,7 @@ export const ModalRoot = forwardRef<HTMLDivElement, Props>(({ isOpen, className,
     <div
       ref={ref}
       className={cn(
-        "fixed inset-0 flex justify-center items-center backdrop-blur-2xl bg-black bg-opacity-25 z-10",
+        "fixed inset-0 flex justify-center items-center backdrop-blur-2xl bg-zinc-800 bg-opacity-25 z-10",
         className
       )}
       {...props}
