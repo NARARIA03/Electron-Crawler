@@ -1,5 +1,5 @@
 import { Button, Input } from "@/components";
-import { SELECT_DIRECTORY } from "@/constants/ipc";
+import { DOWNLOAD_QUERY_EXCEL, SELECT_DIRECTORY } from "@/constants/ipc";
 import { useRerendering } from "@/hooks";
 import { getDownloadDirectory, getExcelName, setDownloadDirectory, setExcelName } from "@/lib/localstorage";
 import { ArrowLeft } from "lucide-react";
@@ -39,6 +39,16 @@ export const SettingModal = ({ isOpen, onClose }: Props) => {
     }
   };
 
+  const handleDownloadQueryExcel = () => {
+    try {
+      window.ipcRenderer.invoke(DOWNLOAD_QUERY_EXCEL);
+      toast.success("다운로드 폴더에 검색어 설정용 xlsx가 저장되었습니다.");
+    } catch (e) {
+      console.error(e);
+      toast.error("다운로드 중 에러가 발생했습니다");
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -46,7 +56,10 @@ export const SettingModal = ({ isOpen, onClose }: Props) => {
       className="fixed inset-0 flex justify-center items-center backdrop-blur-2xl bg-zinc-800/40 z-10"
       onPointerDown={onClose}
     >
-      <div className="w-2/3 h-2/3 bg-zinc-100 rounded-2xl p-12" onPointerDown={(e) => e.stopPropagation()}>
+      <div
+        className="w-2/3 h-2/3 overflow-y-auto bg-zinc-100 rounded-2xl no-scrollbar p-12"
+        onPointerDown={(e) => e.stopPropagation()}
+      >
         <div className="relative flex gap-24 justify-center items-center mb-12">
           <ArrowLeft className="absolute left-0 top-1" onClick={onClose} />
           <p className="text-xl font-bold select-none">설정</p>
@@ -74,6 +87,12 @@ export const SettingModal = ({ isOpen, onClose }: Props) => {
                 변경사항 저장
               </Button>
             )}
+          </div>
+          <div className="mb-8">
+            <p className="text-zinc-600 mb-2 select-none">검색 설정용 xlsx 다운로드:</p>
+            <Button className="w-full mt-2" onClick={handleDownloadQueryExcel}>
+              다운로드
+            </Button>
           </div>
         </div>
       </div>
