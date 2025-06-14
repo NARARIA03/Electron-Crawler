@@ -15,9 +15,7 @@ from constants.index import TIME, ByType
 class Selenium:
     def __init__(self, url: str, downloadDir: str) -> None:
         filesDir = os.path.join(downloadDir, "files")
-        imagesDir = os.path.join(downloadDir, "images")
         os.makedirs(filesDir, exist_ok=True)
-        os.makedirs(imagesDir, exist_ok=True)
 
         prefs = {
             "download.default_directory": filesDir,  # 다운로드 경로
@@ -27,16 +25,14 @@ class Selenium:
         }
 
         options = Options()
-        options.add_argument("--headless")
+        # options.add_argument("--headless")
         options.add_experimental_option("prefs", prefs)
         self.driver = webdriver.Chrome(options=options)
         print("웹드라이버 초기 설정 성공", flush=True)
         print(f"파일 다운 경로: {filesDir}", flush=True)
-        print(f"이미지 다운 경로: {imagesDir}", flush=True)
         self.driver.get(url)
         self.wait = WebDriverWait(self.driver, 10)
         self.downloadPath = filesDir
-        self.imagePath = imagesDir
         time.sleep(TIME)
         self.curWindowHandle = self.driver.current_window_handle
         print("현재 페이지: ", self.driver.current_url, flush=True)
@@ -109,20 +105,6 @@ class Selenium:
 
     def waitStaleness(self, el: WebElement) -> None:
         self.wait.until(EC.staleness_of(el))
-
-    def fullScreenShot(self, fileName: str) -> str:
-        time.sleep(TIME)
-        # 화면 스크린샷 저장 (사이트 구현이 Iframe & POST method로 상세검색을 구현해둬서 상세검색 바로가기 url은 존재하지 X)
-        result = self.driver.execute_cdp_cmd(
-            "Page.captureScreenshot",
-            {"captureBeyondViewport": True, "fromSurface": True},
-        )
-        # base64 디코딩 후 파일 저장
-        savedPath = os.path.join(self.imagePath, f"{fileName}.png")
-        with open(savedPath, "wb") as f:
-            f.write(base64.b64decode(result["data"]))
-        print(f"스크린샷 저장 완료: {savedPath}")
-        return savedPath
 
     def downloadOpenGoKr(self, by: ByType, value: str, timeout: int = 60):
         # element가 모두 로드될 때까지 대기

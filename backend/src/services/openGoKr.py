@@ -8,6 +8,7 @@ from constants.index import TIME
 
 def crawlOpenGoKr(
     downloadDir: str,
+    excelName: str,
     query: str,
     organization: str,
     location: str,
@@ -18,8 +19,7 @@ def crawlOpenGoKr(
 ) -> None:
     try:
         browser = Selenium("https://www.open.go.kr/com/main/mainView.do", downloadDir)
-        excel = ExcelHelper(downloadDir, f"{query}_{organization}.xlsx")
-        excel.initializeOpenGoKr()
+        excel = ExcelHelper(downloadDir, excelName)
 
         # 검색어 입력
         browser.typingInputElement("xpath", '//*[@id="m_input"]', query)
@@ -88,13 +88,7 @@ def crawlOpenGoKr(
 ***REMOVED***
 ***REMOVED***
         curPageIdx = 1
-        curRow = 2
-        screenshotPaths = []
         while True:
-            screenshotPath = browser.fullScreenShot(
-                f"{query}_{organization}_{location}_{startDate}_{endDate}_{curPageIdx}"
-            )
-            screenshotPaths.append(screenshotPath)
             # 정보 목록 리스트로 가는 a태그 개수 확인
             length = len(browser.getAllChild("css selector", "#infoList dt span.top a"))
             # 리스트 순회
@@ -128,12 +122,10 @@ def crawlOpenGoKr(
                 )
 
                 # 엑셀에 값 추가
-                excel.setData(curRow, 1, query)
-                excel.setData(curRow, 2, organization)
-                excel.setData(curRow, 3, title)
-                for i in range(0, len(fileLinks)):
-                    excel.setHyperlink(curRow, 4 + i, fileLinks[i])
-                curRow += 1
+                datas = [query, organization, title]
+                excel.setData(datas)
+                excel.setHyperlink(fileLinks, col=4)
+
                 browser.driver.close()
                 browser.goToDefaultWindow()
 
@@ -151,7 +143,7 @@ def crawlOpenGoKr(
             browser.waitStaleness(prevEl)
 
         browser.close()
-        excel.insertImage(screenshotPaths)
+        excel.pretterColumns()
         excel.save()
         time.sleep(TIME)
 

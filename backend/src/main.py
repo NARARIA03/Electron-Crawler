@@ -6,6 +6,8 @@ from services.openGoKr import crawlOpenGoKr
 
 TYPE = ["open-go-kr", "nara-g2b-portal", "computime-alert"]
 
+DIR_NAME = "excel_database"
+
 
 def main():
     if len(sys.argv) < 2:
@@ -15,6 +17,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--type", choices=TYPE, required=True)
     parser.add_argument("--downloadDir", required=True)
+    parser.add_argument("--excelName", required=True)
     parser.add_argument("--data", type=str, required=True)
     args = parser.parse_args()
 
@@ -28,11 +31,10 @@ def main():
         sys.exit(1)
 
     if args.type == "open-go-kr":
-        today = datetime.date.today()
-        dateDir = f"{today.year}_{today.month:02d}_{today.day:02d}"
-        downloadDir = os.path.join(args.downloadDir, dateDir)
+        downloadDir = os.path.join(args.downloadDir, DIR_NAME)
+        excelName = args.excelName
         for cfg in configs:
-            crawlOpenGoKr(downloadDir, **cfg)
+            crawlOpenGoKr(downloadDir, excelName, **cfg)
         print(f"DIRECTORY:{downloadDir}", flush=True)
 
     elif args.type == "nara-g2b-portal":
