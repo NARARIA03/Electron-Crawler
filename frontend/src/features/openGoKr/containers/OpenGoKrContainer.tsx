@@ -1,10 +1,13 @@
 import { Button, H1, Alert, ModalRoot, Loading } from "@/components";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getDownloadDirectory, setDownloadDirectory } from "@/lib/localstorage";
-import { OPEN_FINDER, PYTHON, SELECT_DIRECTORY } from "@/constants/ipc";
+import { getDownloadDirectory } from "@/lib/localstorage";
+import { OPEN_FINDER, PYTHON } from "@/constants/ipc";
 import { toast } from "sonner";
 import type { IpcRendererEvent } from "electron";
+import { ArrowLeft, Settings } from "lucide-react";
+import { overlay } from "overlay-kit";
+import { SettingModal } from "../components";
 
 export const OpenGoKrContainer = () => {
   const navigate = useNavigate();
@@ -12,13 +15,6 @@ export const OpenGoKrContainer = () => {
   const [stdOut, setStdOut] = useState<string>("");
 
   const goToBack = () => navigate(-1);
-
-  const handleDirectoryChange = async () => {
-    const dir = (await window.ipcRenderer.invoke(SELECT_DIRECTORY)) as string | null;
-    if (!dir) return;
-    console.log(dir);
-    setDownloadDirectory(dir);
-  };
 
   const handleTestStart = () => {
     console.log("🔔 handleTestStart 호출");
@@ -73,15 +69,17 @@ export const OpenGoKrContainer = () => {
 
   return (
     <>
-      <H1>정보공개포털 페이지</H1>
+      <div className="w-full flex gap-24 justify-center items-center">
+        <ArrowLeft color="black" size={32} className="cursor-pointer" onClick={goToBack} />
+        <H1>정보공개포털 페이지</H1>
+        <Settings
+          color="black"
+          className="cursor-pointer"
+          onClick={() => overlay.open(({ isOpen, close }) => <SettingModal isOpen={isOpen} onClose={close} />)}
+        />
+      </div>
       <div className="flex gap-24">
-        <Button variant="secondary" size="lg" onClick={goToBack}>
-          뒤로가기
-        </Button>
-        <Button variant="secondary" size="lg" onClick={handleDirectoryChange}>
-          다운로드 경로 변경
-        </Button>
-        <Button variant="secondary" size="lg" onClick={handleTestStart}>
+        <Button size="lg" onClick={handleTestStart}>
           데이터 수집 시작
         </Button>
       </div>

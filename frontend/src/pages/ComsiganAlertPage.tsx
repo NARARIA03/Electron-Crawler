@@ -9,7 +9,7 @@ export const ComsiganAlertPage = () => {
   return (
     <>
       <H1>컴시간 알리미 페이지</H1>
-      <Button variant="secondary" size="lg" onClick={goToBack}>
+      <Button size="lg" onClick={goToBack}>
         뒤로가기
       </Button>
     </>
