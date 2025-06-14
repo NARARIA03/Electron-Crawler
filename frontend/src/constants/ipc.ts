@@ -11,3 +11,5 @@ export const PYTHON = {
 };
 
 export const OPEN_FINDER = "open-finder";
+
+export const DOWNLOAD_QUERY_EXCEL = "download-excel";

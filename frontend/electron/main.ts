@@ -1,7 +1,7 @@
 import { app, BrowserWindow } from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { downloadDirIpc, openFinderIpc, pythonIpc } from "./ipcs";
+import { downloadDirIpc, downloadQueryExcel, openFinderIpc, pythonIpc } from "./ipcs";
 
 // const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -70,4 +70,5 @@ app.whenReady().then(() => {
   downloadDirIpc();
   pythonIpc();
   openFinderIpc();
+  downloadQueryExcel();
 });
