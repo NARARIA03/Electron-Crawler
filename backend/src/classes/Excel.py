@@ -1,10 +1,7 @@
 import os
-from math import ceil
-from openpyxl import Workbook
-from openpyxl.utils import get_column_letter
-from openpyxl.drawing.image import Image as OpenpyxlImage
+from openpyxl import Workbook, load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
-import datetime
+from typing import List
 
 
 class ExcelHelper:
@@ -13,55 +10,57 @@ class ExcelHelper:
 
     def __init__(self, downloadDir: str, fileName: str, sheetName: str = "Sheet1"):
         self.path = os.path.join(downloadDir, fileName)
-        self.wb = Workbook()
-        activeWs = self.wb.active
-        assert isinstance(activeWs, Worksheet)
-        self.ws = activeWs
-        self.ws.title = sheetName
-        print(f"Excel 데이터 생성 완료, {self.path}", flush=True)
+        if os.path.exists(self.path):
+            self.wb = load_workbook(self.path)
+            if sheetName in self.wb.sheetnames:
+                self.ws = self.wb[sheetName]
+            else:
+                self.ws = self.wb.create_sheet(sheetName)
+            print(f"Excel 데이터 로드 완료, {self.path}", flush=True)
+        else:
+            self.wb = Workbook()
+            activeWs = self.wb.active
+            assert isinstance(activeWs, Worksheet)
+            self.ws = activeWs
+            self.ws.title = sheetName
+            self.setData(["검색어", "기관명", "정보 제목", "파일 링크"])
+            print(f"Excel 데이터 생성 완료, {self.path}", flush=True)
 
-    def setData(self, row: int, col: int, data: str):
-        """
-        row, col 모두 1-based index임에 주의
-        """
-        self.ws.cell(row=row, column=col, value=data)
-        print(f"{row}_{col}에 {data} 삽입 완료", flush=True)
+    def setData(self, datas: List[str]):
+        nextRow = self.ws.max_row + 1
+        for idx, data in enumerate(datas, start=0):
+            self.ws.cell(row=nextRow, column=idx + 1, value=data)
+            print(f"{nextRow}_{idx + 1}에 {data} 삽입 완료", flush=True)
 
-    def setHyperlink(
-        self, row: int, col: int, filePath: str, displayText: str = "바로가기"
-    ):
-        if not os.path.exists(filePath):
-            raise FileNotFoundError(f"링크 대상 파일을 찾을 수 없습니다: {filePath}")
-
-        path = f"file:///{os.path.abspath(filePath)}"
-        cell = self.ws.cell(row=row, column=col)
-        cell.value = displayText
-        cell.hyperlink = path  # type: ignore
-        cell.style = "Hyperlink"
-        print(f"Excel에 {os.path.abspath(filePath)} 파일 연결 완료", flush=True)
+    def setHyperlink(self, fileLinks: List, col: int, displayText: str = "바로가기"):
+        for idx, link in enumerate(fileLinks, start=0):
+            if not os.path.exists(link):
+                raise FileNotFoundError(f"링크 대상 파일을 찾을 수 없습니다: {link}")
+            path = f"file:///{os.path.abspath(link)}"
+            row = self.ws.max_row
+            cell = self.ws.cell(row=row, column=col + idx)
+            cell.value = displayText  # type: ignore
+            cell.hyperlink = path  # type: ignore
+            cell.style = "Hyperlink"
+            print(f"Excel에 {os.path.abspath(link)} 파일 연결 완료", flush=True)
 
     def save(self):
         directory = os.path.dirname(self.path)
         if directory and not os.path.exists(directory):
             os.makedirs(directory, exist_ok=True)
         self.wb.save(self.path)
-        print(f"{directory}에 Excel 저장 완료")
+        print(f"{directory}에 Excel 저장 완료", flush=True)
 
-    def initializeOpenGoKr(self):
-        self.setData(row=1, col=1, data="검색어")
-        self.setData(row=1, col=2, data="기관명")
-        self.setData(row=1, col=3, data="정보 제목")
-        self.setData(row=1, col=4, data="파일 링크")
-
-    def insertImage(self, paths: list):
-        imageSheet = self.wb.create_sheet("Images")
-        curRow = 1
-        perRow = 20
-        for path in paths:
-            if not os.path.exists(path):
-                continue
-            img = OpenpyxlImage(path)
-            cell = f"{get_column_letter(1)}{curRow}"
-            img.anchor = cell
-            imageSheet.add_image(img)
-            curRow += ceil(img.height / perRow)
+    def pretterColumns(self):
+        ws = self.ws
+        for column in ws.columns:
+            max_length = 0
+            column_letter = column[0].column_letter  # type: ignore
+            for cell in column:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(cell.value)  # type: ignore
+                except:
+                    pass
+            adjusted_width = (max_length + 2) * 2
+            ws.column_dimensions[column_letter].width = adjusted_width
