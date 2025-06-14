@@ -6,7 +6,7 @@ import path from "node:path";
 
 type IPCArgs = {
   type: string;
-  data: any[];
+  data: unknown[];
   downloadDir: string | null;
   excelName: string | null;
   scheduledTime?: string;

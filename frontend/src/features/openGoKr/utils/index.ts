@@ -1,6 +1,6 @@
 import * as XLSX from "xlsx";
 
-export const parseExcelQuery = async (excelFile: File): Promise<any[]> => {
+export const parseExcelQuery = async (excelFile: File): Promise<unknown[]> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
