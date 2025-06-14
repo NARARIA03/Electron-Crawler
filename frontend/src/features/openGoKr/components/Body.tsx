@@ -7,6 +7,8 @@ import { toast } from "sonner";
 
 export const Body = () => {
   const [query, setQuery] = useState<any[] | null>(null);
+  const [scheduledTime, setScheduledTime] = useState<string | undefined>(undefined);
+
   const { isLoading, log, handleStartIPC } = useIPC("open-go-kr");
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -25,6 +27,15 @@ export const Body = () => {
     }
   };
 
+  const handleStartAfter = () => {
+    if (!scheduledTime) return toast.error("먼저 시작 예약 시간을 설정해주세요.");
+    if (!query) return toast.error("먼저 검색 엑셀을 업로드해주세요.");
+    if (isLoading) return toast.error("이미 작업이 진행 중입니다. 작업이 끝난 후 시도해주세요");
+
+    toast.success("예약 시간에 작업이 예약되었습니다. 예약은 1개만 가능하며, 덮어씌워집니다.");
+    handleStartIPC(query, scheduledTime);
+  };
+
   const handleStartNow = () => {
     if (!query) return toast.error("먼저 검색 엑셀을 업로드해주세요.");
     if (isLoading) return toast.error("이미 작업이 진행 중입니다. 작업이 끝난 후 시도해주세요");
@@ -36,8 +47,9 @@ export const Body = () => {
     <>
       <Table>
         <Table.Caption className="text-start">
-          <p>하나의 작업만 예약/실행 가능합니다. 하나의 검색 엑셀에 여러 검색값을 입력해주세요.</p>
+          <p>하나의 작업만 예약/실행 가능하며, 여러 번 예약 시 마지막 예약 작업으로 덮어씌워집니다.</p>
           <p>프로그램을 종료하면 예약된 작업이 취소됩니다.</p>
+          <p>예약 작업을 즉시 실행하면, 예약 작업은 취소됩니다.</p>
         </Table.Caption>
         <Table.Header>
           <Table.Row>
@@ -53,10 +65,10 @@ export const Body = () => {
               <Input type="file" accept=".xlsx, .xls" className="w-[200px]" onChange={handleFileChange} />
             </Table.Cell>
             <Table.Cell>
-              <Input type="datetime-local" className="w-[200px]" />
+              <Input type="datetime-local" className="w-[200px]" onChange={(e) => setScheduledTime(e.target.value)} />
             </Table.Cell>
             <Table.Cell>
-              <Send className="hover:text-red-500" />
+              <Send className="hover:text-red-500" onClick={handleStartAfter} />
             </Table.Cell>
             <Table.Cell>
               <Play className="hover:text-red-500" onClick={handleStartNow} />
