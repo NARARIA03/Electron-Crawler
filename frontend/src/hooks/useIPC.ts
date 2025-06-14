@@ -9,6 +9,8 @@ export const useIPC = (type: "open-go-kr" | "nara-g2b-portal" | "computime-alert
   const [log, setLog] = useState<string>("");
 
   const handleStartIPC = (data: any[]) => {
+    if (isLoading) return;
+
     const downloadDir = getDownloadDirectory();
     const excelName = getExcelName();
     setIsLoading(true);

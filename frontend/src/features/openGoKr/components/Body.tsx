@@ -26,10 +26,9 @@ export const Body = () => {
   };
 
   const handleStartNow = () => {
-    if (!query) {
-      toast.error("먼저 검색 엑셀을 업로드해주세요.");
-      return;
-    }
+    if (!query) return toast.error("먼저 검색 엑셀을 업로드해주세요.");
+    if (isLoading) return toast.error("이미 작업이 진행 중입니다. 작업이 끝난 후 시도해주세요");
+
     handleStartIPC(query);
   };
 
