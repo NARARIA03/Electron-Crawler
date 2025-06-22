@@ -47,20 +47,9 @@ jobs:
         run: |
           npm run build --win
 
-      - name: Upload Windows installer
-        uses: actions/upload-artifact@v4.6.2
-        continue-on-error: true
-        with:
-          name: build-test
-          path: |
-            frontend/dist/*.exe              
-            frontend/dist/*.msi
-          if-no-files-found: error
-          retention-days: 1
-          compression-level: 6
-          overwrite: true
-          include-hidden-files: false
-      
+      - name: Create ZIP file
+        run: zip -r dist.zip frontend/dist
+
       - name: Create Github Release
         if: always()
         id: create_release
@@ -68,8 +57,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: windows-build-${{ github.run_number }}
-          release_name: Windows Build ${{ github.run_number }}
+          tag_name: ${{ steps.extract_version_name.outputs.version }}
+          release_name: v${{ steps.extract_version_name.outputs.version }}
+          body: ${{ github.event.pull_request.body }}
           draft: false
           prerelease: false
 
@@ -80,8 +70,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: |
-            frontend/dist/*.exe
-            frontend/dist/*.msi
-          asset_name: installer-${{ github.run_number }}.zip
+          asset_path: ./dist.zip
+          asset_name: dist.zip
           asset_content_type: application/zip
