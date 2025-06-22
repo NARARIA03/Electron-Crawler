@@ -29,7 +29,9 @@ class ExcelHelper:
             assert isinstance(activeWs, Worksheet)
             self.ws = activeWs
             self.ws.title = sheetName
-            self.setData(["검색어", "기관명", "정보 제목", "단위 업무", "파일 링크"])
+            self.setData(
+                ["검색어", "기관명", "정보 제목", "단위 업무", "생산 일자", "파일 링크"]
+            )
             print(f"Excel 데이터 생성 완료, {self.path}", flush=True)
 
     def setData(self, datas: List[Union[Data, str]]):
