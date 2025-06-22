@@ -48,7 +48,9 @@ jobs:
           npm run build --win
 
       - name: Create ZIP file
-        run: zip -r dist.zip frontend/dist
+        shell: pwsh
+        run: |
+          Compress-Archive -Path frontend/dist/* -DestinationPath dist.zip
 
       - name: Create Github Release
         if: always()
@@ -57,9 +59,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.extract_version_name.outputs.version }}
-          release_name: v${{ steps.extract_version_name.outputs.version }}
-          body: ${{ github.event.pull_request.body }}
+          tag_name: windows-build-${{ github.run_number }}
+          release_name: windows-build-${{ github.run_number }}
           draft: false
           prerelease: false
 
