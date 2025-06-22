@@ -125,8 +125,10 @@ def crawlOpenGoKr(
                 )
 
                 # 엑셀에 값 추가
-                datas = [query, organization, title, workUnit]
-                excel.setData(datas)
+                excel.setData(
+                    [query, organization, {"text": title, "url": detail_url}, workUnit]
+                )
+                # 다운로드한 파일 linking
                 excel.setHyperlink(
                     fileLinks, col=5, hasMissingDownloads=hasMissingDownloads
                 )
