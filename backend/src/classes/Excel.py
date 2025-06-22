@@ -2,7 +2,12 @@ import os
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font
 from openpyxl.worksheet.worksheet import Worksheet
-from typing import List
+from typing import List, Optional, TypedDict, Union
+
+
+class Data(TypedDict):
+    text: str
+    url: Optional[str]
 
 
 class ExcelHelper:
@@ -27,11 +32,22 @@ class ExcelHelper:
             self.setData(["검색어", "기관명", "정보 제목", "단위 업무", "파일 링크"])
             print(f"Excel 데이터 생성 완료, {self.path}", flush=True)
 
-    def setData(self, datas: List[str]):
+    def setData(self, datas: List[Union[Data, str]]):
         nextRow = self.ws.max_row + 1
+
         for idx, data in enumerate(datas, start=0):
-            self.ws.cell(row=nextRow, column=idx + 1, value=data)
-            print(f"{nextRow}_{idx + 1}에 {data} 삽입 완료", flush=True)
+            cell = self.ws.cell(row=nextRow, column=idx + 1)
+            if isinstance(data, str):
+                text, url = data, None
+            else:
+                text, url = data["text"], data["url"]
+
+            cell.value = text  # type: ignore
+            if url:
+                cell.hyperlink = url  # type: ignore
+                cell.style = "Hyperlink"
+
+            print(f"{nextRow}_{idx + 1}에 {text} 삽입 완료", flush=True)
 
     def setHyperlink(
         self,
