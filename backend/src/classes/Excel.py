@@ -1,7 +1,13 @@
 import os
 from openpyxl import Workbook, load_workbook
+from openpyxl.styles import Font
 from openpyxl.worksheet.worksheet import Worksheet
-from typing import List
+from typing import List, Optional, TypedDict, Union
+
+
+class Data(TypedDict):
+    text: str
+    url: Optional[str]
 
 
 class ExcelHelper:
@@ -23,26 +29,52 @@ class ExcelHelper:
             assert isinstance(activeWs, Worksheet)
             self.ws = activeWs
             self.ws.title = sheetName
-            self.setData(["검색어", "기관명", "정보 제목", "단위 업무", "파일 링크"])
+            self.setData(
+                ["검색어", "기관명", "정보 제목", "단위 업무", "생산 일자", "파일 링크"]
+            )
             print(f"Excel 데이터 생성 완료, {self.path}", flush=True)
 
-    def setData(self, datas: List[str]):
+    def setData(self, datas: List[Union[Data, str]]):
         nextRow = self.ws.max_row + 1
-        for idx, data in enumerate(datas, start=0):
-            self.ws.cell(row=nextRow, column=idx + 1, value=data)
-            print(f"{nextRow}_{idx + 1}에 {data} 삽입 완료", flush=True)
 
-    def setHyperlink(self, fileLinks: List, col: int, displayText: str = "바로가기"):
+        for idx, data in enumerate(datas, start=0):
+            cell = self.ws.cell(row=nextRow, column=idx + 1)
+            if isinstance(data, str):
+                text, url = data, None
+            else:
+                text, url = data["text"], data["url"]
+
+            cell.value = text  # type: ignore
+            if url:
+                cell.hyperlink = url  # type: ignore
+                cell.style = "Hyperlink"
+
+            print(f"{nextRow}_{idx + 1}에 {text} 삽입 완료", flush=True)
+
+    def setHyperlink(
+        self,
+        fileLinks: List,
+        col: int,
+        displayText: str = "바로가기",
+        hasMissingDownloads: bool = False,
+    ):
+        row = self.ws.max_row
+
         for idx, link in enumerate(fileLinks, start=0):
             if not os.path.exists(link):
                 raise FileNotFoundError(f"링크 대상 파일을 찾을 수 없습니다: {link}")
             path = f"file:///{os.path.abspath(link)}"
-            row = self.ws.max_row
+
             cell = self.ws.cell(row=row, column=col + idx)
             cell.value = displayText  # type: ignore
             cell.hyperlink = path  # type: ignore
             cell.style = "Hyperlink"
             print(f"Excel에 {os.path.abspath(link)} 파일 연결 완료", flush=True)
+
+        if hasMissingDownloads:
+            cell = self.ws.cell(row=row, column=col + len(fileLinks))
+            cell.value = "누락된 파일이 존재합니다."  # type: ignore
+            cell.font = Font(color="FFFF0000")
 
     def save(self):
         directory = os.path.dirname(self.path)
