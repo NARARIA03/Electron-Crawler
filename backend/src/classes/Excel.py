@@ -1,5 +1,6 @@
 import os
 from openpyxl import Workbook, load_workbook
+from openpyxl.styles import Font
 from openpyxl.worksheet.worksheet import Worksheet
 from typing import List
 
@@ -32,17 +33,30 @@ class ExcelHelper:
             self.ws.cell(row=nextRow, column=idx + 1, value=data)
             print(f"{nextRow}_{idx + 1}에 {data} 삽입 완료", flush=True)
 
-    def setHyperlink(self, fileLinks: List, col: int, displayText: str = "바로가기"):
+    def setHyperlink(
+        self,
+        fileLinks: List,
+        col: int,
+        displayText: str = "바로가기",
+        hasMissingDownloads: bool = False,
+    ):
+        row = self.ws.max_row
+
         for idx, link in enumerate(fileLinks, start=0):
             if not os.path.exists(link):
                 raise FileNotFoundError(f"링크 대상 파일을 찾을 수 없습니다: {link}")
             path = f"file:///{os.path.abspath(link)}"
-            row = self.ws.max_row
+
             cell = self.ws.cell(row=row, column=col + idx)
             cell.value = displayText  # type: ignore
             cell.hyperlink = path  # type: ignore
             cell.style = "Hyperlink"
             print(f"Excel에 {os.path.abspath(link)} 파일 연결 완료", flush=True)
+
+        if hasMissingDownloads:
+            cell = self.ws.cell(row=row, column=col + len(fileLinks))
+            cell.value = "누락된 파일이 존재합니다."  # type: ignore
+            cell.font = Font(color="FFFF0000")
 
     def save(self):
         directory = os.path.dirname(self.path)
