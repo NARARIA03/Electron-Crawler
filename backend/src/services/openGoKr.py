@@ -114,6 +114,8 @@ def crawlOpenGoKr(
                 title = browser.getElement("xpath", '//*[@id="infoSj"]/p/strong').text
                 # 단위업무 저장
                 workUnit = browser.getElement("xpath", '//*[@id="unitJobNm"]/p').text
+                # 생산일자 저장
+                prodDate = browser.getElement("xpath", '//*[@id="prdnDtView"]/p').text
 
                 # 다운로드 로직 실행
                 (fileLinks, hasMissingDownloads) = browser.downloadOpenGoKr(
@@ -126,11 +128,17 @@ def crawlOpenGoKr(
 
                 # 엑셀에 값 추가
                 excel.setData(
-                    [query, organization, {"text": title, "url": detail_url}, workUnit]
+                    [
+                        query,
+                        organization,
+                        {"text": title, "url": detail_url},
+                        workUnit,
+                        prodDate,
+                    ]
                 )
                 # 다운로드한 파일 linking
                 excel.setHyperlink(
-                    fileLinks, col=5, hasMissingDownloads=hasMissingDownloads
+                    fileLinks, col=6, hasMissingDownloads=hasMissingDownloads
                 )
 
                 browser.driver.close()
