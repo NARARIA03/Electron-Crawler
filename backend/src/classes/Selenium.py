@@ -4,9 +4,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException, NoAlertPresentException
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
-from typing import List
+from typing import List, Tuple
 import os
-import base64
 import time
 import glob
 from constants.index import TIME, ByType
@@ -106,7 +105,9 @@ class Selenium:
     def waitStaleness(self, el: WebElement) -> None:
         self.wait.until(EC.staleness_of(el))
 
-    def downloadOpenGoKr(self, by: ByType, value: str, timeout: int = 60):
+    def downloadOpenGoKr(
+        self, by: ByType, value: str, timeout: int = 60
+    ) -> Tuple[List, bool]:
         # element가 모두 로드될 때까지 대기
         try:
             WebDriverWait(self.driver, 5).until(
@@ -114,14 +115,16 @@ class Selenium:
             )
         except TimeoutException:
             print("매칭되는 다운로드 버튼이 없습니다.", flush=True)
-            return []
+            return ([], False)
 
         # 다운로드 버튼 elements 추출
         elements = self.driver.find_elements(by, value)
         if not elements:
-            return []
+            return ([], False)
 
         downloadedFiles = []
+        hasMissingDownloads = False
+
         # 각 버튼들에 대해서 순회 시작
         for idx, el in enumerate(elements, start=1):
             # 버튼 클릭 전에 존재하는 파일 경로 집합 저장
@@ -131,7 +134,7 @@ class Selenium:
             # 파일 하나 다운 재시도 횟수
             attempts = 0
 
-            # 최대 10번 시도했는데 다운로드하지 못했으면 실행되는 반복문
+            # 다운로드를 최대 10번 시도하는 반복문
             while attempts < 10 and not downloaded:
                 el.click()
                 print(
@@ -179,4 +182,6 @@ class Selenium:
                     f"[{idx}/{len(elements)}] 다운로드 실패: {attempts}회 재시도 후에도 완료되지 않음",
                     flush=True,
                 )
-        return downloadedFiles
+                hasMissingDownloads = True
+
+        return (downloadedFiles, hasMissingDownloads)
