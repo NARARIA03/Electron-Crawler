@@ -32,7 +32,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18.x"
+          node-version: "22.x"
 
       - name: Install frontend dependencies
         working-directory: ./frontend
@@ -49,13 +49,35 @@ jobs:
 
       - name: Upload Windows installer
         uses: actions/upload-artifact@v4.6.2
+        continue-on-error: true
         with:
           name: build-test
           path: |
             frontend/dist/*.exe              
             frontend/dist/*.msi
           if-no-files-found: error
-          retention-days: 30
+          retention-days: 1
           compression-level: 6
           overwrite: true
           include-hidden-files: false
+      
+      - name: Create Github Release
+        if: always()
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: windows-build-${{ github.run_number }}
+          release_name: Windows Build ${{ github.run_number }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Assets
+        if: always()
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: |
+            frontend/dist/*.exe
+            frontend/dist/*.msi
+          asset_name: installer-${{ github.run_number }}.zip
+          asset_content_type: application/zip
