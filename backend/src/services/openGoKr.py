@@ -84,8 +84,6 @@ def crawlOpenGoKr(
             return
         browser.clickElement("xpath", '//*[@id="infoList"]')
 
-***REMOVED***
-***REMOVED***
         curPageIdx = 1
         while True:
             # 정보 목록 리스트로 가는 a태그 개수 확인

@@ -92,8 +92,6 @@ def crawlOpenGoKr(
             return
         browser.clickElement("xpath", '//*[@id="infoList"]')
 
-***REMOVED***
-***REMOVED***
         curPageIdx = 1
         curRow = 2
         screenshotPaths = []
