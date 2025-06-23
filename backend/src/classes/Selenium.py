@@ -24,7 +24,7 @@ class Selenium:
         }
 
         options = Options()
-        options.add_argument("--headless")
+        # options.add_argument("--headless")
         options.add_experimental_option("prefs", prefs)
         self.driver = webdriver.Chrome(options=options)
         print("웹드라이버 초기 설정 성공", flush=True)
