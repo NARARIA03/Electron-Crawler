@@ -1,8 +1,11 @@
 import argparse
 import sys, json
-import datetime
 import os
 from services.openGoKr import crawlOpenGoKr
+import io
+
+sys.stdout = io.TextIOWrapper(sys.stdout.detach(), encoding="utf-8")  # type: ignore
+sys.stderr = io.TextIOWrapper(sys.stderr.detach(), encoding="utf-8")  # type: ignore
 
 TYPE = ["open-go-kr", "nara-g2b-portal", "computime-alert"]
 

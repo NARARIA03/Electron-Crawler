@@ -79,12 +79,12 @@ const runPythonProcess = (event: IpcMainEvent, args: RunPythonArgs) => {
   ]);
 
   child.stdout.on("data", (chunk: Buffer) => {
-    const text = chunk.toString();
+    const text = chunk.toString("utf-8");
     event.reply(PYTHON.stdout, text);
   });
 
   child.stderr.on("data", (chunk: Buffer) => {
-    const text = chunk.toString();
+    const text = chunk.toString("utf-8");
     event.reply(PYTHON.stderr, text);
   });
 
