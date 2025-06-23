@@ -23,7 +23,9 @@ def crawlOpenGoKr(
         excel = ExcelHelper(downloadDir, excelName)
 
         # 검색어 입력
-        browser.typingInputElement("xpath", '//*[@id="m_input"]', query + Keys.ENTER)
+        browser.typingInputElement("xpath", '//*[@id="m_input"]', query)
+        # 검색 버튼 클릭
+        browser.clickElement("xpath", '//*[@id="mainBackImg"]/div[2]/div[1]/div/button')
         # 상세 검색 클릭
         browser.clickElement("xpath", '//*[@id="srchBtnDiv"]/a')
         # iframe에 focus
