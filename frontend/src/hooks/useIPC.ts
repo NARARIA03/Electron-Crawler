@@ -1,5 +1,5 @@
 import { OPEN_FINDER, PYTHON } from "@/constants/ipc";
-import { getDownloadDirectory, getExcelName } from "@/lib/localstorage";
+import { getDebugMode, getDownloadDirectory, getExcelName } from "@/lib/localstorage";
 import { IpcRendererEvent } from "electron";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ export const useIPC = (type: "open-go-kr" | "nara-g2b-portal" | "computime-alert
 
     const downloadDir = getDownloadDirectory();
     const excelName = getExcelName();
+    const debug = getDebugMode();
     if (!scheduledTime) setIsLoading(true);
 
     window.ipcRenderer.send(PYTHON.run, {
@@ -21,6 +22,7 @@ export const useIPC = (type: "open-go-kr" | "nara-g2b-portal" | "computime-alert
       downloadDir,
       excelName,
       scheduledTime,
+      debug,
     });
   };
 

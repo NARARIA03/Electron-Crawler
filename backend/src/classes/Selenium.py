@@ -12,7 +12,7 @@ from constants.index import TIME, ByType
 
 
 class Selenium:
-    def __init__(self, url: str, downloadDir: str) -> None:
+    def __init__(self, url: str, downloadDir: str, debug: str) -> None:
         filesDir = os.path.join(downloadDir, "files")
         os.makedirs(filesDir, exist_ok=True)
 
@@ -24,8 +24,9 @@ class Selenium:
         }
 
         options = Options()
-        options.add_argument("--headless")
-        options.add_argument("--start-maximized")
+        print(debug, flush=True)
+        if debug != '"true"':
+            options.add_argument("--headless")
         options.add_experimental_option("prefs", prefs)
         self.driver = webdriver.Chrome(options=options)
         print("웹드라이버 초기 설정 성공", flush=True)
@@ -44,14 +45,15 @@ class Selenium:
     def getElement(self, by: ByType, value: str) -> WebElement:
         return (
             WebDriverWait(self.driver, 10)
-            .until(EC.element_to_be_clickable((by, value)))
+            .until(EC.presence_of_element_located((by, value)))
             .find_element(by, value)
         )
 
     def clickElement(self, by: ByType, value: str) -> None:
-        WebDriverWait(self.driver, 10).until(
+        el = WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((by, value))
-        ).click()
+        )
+        self.driver.execute_script("arguments[0].click();", el)
         print("요소 클릭 완료", flush=True)
 
     def typingInputElement(
