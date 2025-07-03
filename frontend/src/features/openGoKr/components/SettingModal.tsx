@@ -1,7 +1,15 @@
 import { Button, Input } from "@/components";
+import { Switch } from "@/components/ui/switch";
 import { DOWNLOAD_QUERY_EXCEL, SELECT_DIRECTORY } from "@/constants/ipc";
 import { useRerendering } from "@/hooks";
-import { getDownloadDirectory, getExcelName, setDownloadDirectory, setExcelName } from "@/lib/localstorage";
+import {
+  getDebugMode,
+  getDownloadDirectory,
+  getExcelName,
+  setDebugMode,
+  setDownloadDirectory,
+  setExcelName,
+} from "@/lib/localstorage";
 import { ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -14,6 +22,7 @@ type Props = {
 export const SettingModal = ({ isOpen, onClose }: Props) => {
   const [downloadDir, setDownloadDir] = useState<string | null>(() => getDownloadDirectory());
   const [excelFileName, setExcelFileName] = useState<string | null>(() => getExcelName());
+  const [debug, setDebug] = useState<string | null>(() => getDebugMode());
   const rerenderTrigger = useRerendering();
 
   const isExcelNameChanged = excelFileName !== getExcelName();
@@ -30,6 +39,11 @@ export const SettingModal = ({ isOpen, onClose }: Props) => {
       console.error(e);
       toast.error("에러 발생, 재시도해주세요.");
     }
+  };
+
+  const handleDebugCheckedChange = (checked: boolean) => {
+    setDebug(JSON.stringify(checked));
+    setDebugMode(checked);
   };
 
   const handleExcelFileNameChange = () => {
@@ -93,6 +107,10 @@ export const SettingModal = ({ isOpen, onClose }: Props) => {
             <Button className="w-full mt-2" onClick={handleDownloadQueryExcel}>
               다운로드
             </Button>
+          </div>
+          <div className="mb-8 pb-4">
+            <p className="text-zinc-600 mb-2 select-none">디버깅 모드:</p>
+            <Switch checked={debug === "true"} onCheckedChange={handleDebugCheckedChange} />
           </div>
         </div>
       </div>

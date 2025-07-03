@@ -10,6 +10,7 @@ from constants.index import TIME
 def crawlOpenGoKr(
     downloadDir: str,
     excelName: str,
+    debug: str,
     query: str,
     organization: str,
     location: str,
@@ -19,7 +20,9 @@ def crawlOpenGoKr(
     exclude: Optional[str] = None,
 ) -> None:
     try:
-        browser = Selenium("https://www.open.go.kr/com/main/mainView.do", downloadDir)
+        browser = Selenium(
+            "https://www.open.go.kr/com/main/mainView.do", downloadDir, debug
+        )
         excel = ExcelHelper(downloadDir, excelName)
 
         # 검색어 입력

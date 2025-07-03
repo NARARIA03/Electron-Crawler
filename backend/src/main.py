@@ -22,6 +22,7 @@ def main():
     parser.add_argument("--downloadDir", required=True)
     parser.add_argument("--excelName", required=True)
     parser.add_argument("--data", type=str, required=True)
+    parser.add_argument("--debug", type=str, required=True)
     args = parser.parse_args()
 
     try:
@@ -35,9 +36,11 @@ def main():
 
     if args.type == "open-go-kr":
         downloadDir = os.path.join(args.downloadDir, DIR_NAME)
+        debug = args.debug
         excelName = args.excelName
+
         for cfg in configs:
-            crawlOpenGoKr(downloadDir, excelName, **cfg)
+            crawlOpenGoKr(downloadDir, excelName, debug, **cfg)
         print(f"DIRECTORY:{downloadDir}", flush=True)
 
     elif args.type == "nara-g2b-portal":

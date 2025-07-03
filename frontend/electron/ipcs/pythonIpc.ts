@@ -9,6 +9,7 @@ type IPCArgs = {
   data: unknown[];
   downloadDir: string | null;
   excelName: string | null;
+  debug?: string;
   scheduledTime?: string;
 };
 
@@ -44,6 +45,7 @@ export const pythonIpc = () => {
         downloadDir: args.downloadDir,
         excelName: args.excelName,
         scheduledTime: scheduled,
+        debug: args.debug,
         event,
       };
       console.log("예약 등록됨:", task);
@@ -76,6 +78,8 @@ const runPythonProcess = (event: IpcMainEvent, args: RunPythonArgs) => {
     args.excelName ?? "database.xlsx",
     "--data",
     JSON.stringify(args.data),
+    "--debug",
+    JSON.stringify(args.debug),
   ]);
 
   child.stdout.on("data", (chunk: Buffer) => {

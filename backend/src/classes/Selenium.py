@@ -12,7 +12,7 @@ from constants.index import TIME, ByType
 
 
 class Selenium:
-    def __init__(self, url: str, downloadDir: str) -> None:
+    def __init__(self, url: str, downloadDir: str, debug: str) -> None:
         filesDir = os.path.join(downloadDir, "files")
         os.makedirs(filesDir, exist_ok=True)
 
@@ -24,7 +24,9 @@ class Selenium:
         }
 
         options = Options()
-        options.add_argument("--headless")
+        print(debug, flush=True)
+        if debug != '"true"':
+            options.add_argument("--headless")
         options.add_argument("--start-maximized")
         options.add_experimental_option("prefs", prefs)
         self.driver = webdriver.Chrome(options=options)
