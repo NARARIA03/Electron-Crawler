@@ -1,7 +1,6 @@
 import { Button, Input } from "@/components";
 import { Switch } from "@/components/ui/switch";
 import { DOWNLOAD_QUERY_EXCEL, SELECT_DIRECTORY } from "@/constants/ipc";
-import { useRerendering } from "@/hooks";
 import {
   getDebugMode,
   getDownloadDirectory,
@@ -23,7 +22,6 @@ export const SettingModal = ({ isOpen, onClose }: Props) => {
   const [downloadDir, setDownloadDir] = useState<string | null>(() => getDownloadDirectory());
   const [excelFileName, setExcelFileName] = useState<string | null>(() => getExcelName());
   const [debug, setDebug] = useState<string | null>(() => getDebugMode());
-  const rerenderTrigger = useRerendering();
 
   const isExcelNameChanged = excelFileName !== getExcelName();
 
@@ -47,10 +45,13 @@ export const SettingModal = ({ isOpen, onClose }: Props) => {
   };
 
   const handleExcelFileNameChange = () => {
-    if (excelFileName) {
-      setExcelName(excelFileName);
-      rerenderTrigger();
-    }
+    if (!excelFileName) return;
+
+    const fileNameWithExtension = /\.xlsx$/i.test(excelFileName)
+      ? excelFileName
+      : excelFileName.replace(/\.[^/\\.]*$/, "") + ".xlsx";
+    setExcelFileName(fileNameWithExtension);
+    setExcelName(fileNameWithExtension);
   };
 
   const handleDownloadQueryExcel = () => {
