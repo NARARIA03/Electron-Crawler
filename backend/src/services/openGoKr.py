@@ -206,5 +206,6 @@ def crawlOpenGoKr(
     except Exception as e:
         utils.printWithLogging(f"에러 발생: {e}")
         utils.printWithLogging(traceback.format_exc())
-        utils.saveLog(downloadDir)
+        utils.saveLog(f"{downloadDir}/logs")
+        utils.printWithLogging(f"FAILDIRECTORY:{downloadDir}/logs")
         raise RuntimeError("크롤링 도중 오류 발생")

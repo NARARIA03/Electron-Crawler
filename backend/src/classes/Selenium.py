@@ -113,6 +113,7 @@ class Selenium:
         self, by: ByType, value: str, timeout: int = 60
     ) -> Tuple[List, bool]:
         # element가 모두 로드될 때까지 대기
+        utils.printWithLogging(f"현재 페이지: {self.driver.current_url}")
         try:
             WebDriverWait(self.driver, 5).until(
                 EC.presence_of_all_elements_located((by, value))

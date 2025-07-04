@@ -5,8 +5,9 @@ from services.openGoKr import crawlOpenGoKr
 from utils import utils
 import io
 
-sys.stdout = io.TextIOWrapper(sys.stdout.detach(), encoding="utf-8")  # type: ignore
-sys.stderr = io.TextIOWrapper(sys.stderr.detach(), encoding="utf-8")  # type: ignore
+if sys.stdout.encoding.lower() != "utf-8":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 TYPE = ["open-go-kr", "nara-g2b-portal", "computime-alert"]
 
