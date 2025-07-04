@@ -1,6 +1,7 @@
 from classes.Selenium import Selenium
 from selenium.webdriver.common.keys import Keys
 from classes.Excel import ExcelHelper
+from utils import utils
 import time
 import re
 from typing import Optional
@@ -81,9 +82,9 @@ def crawlOpenGoKr(
         browser.focusIframe("id", "modalIfm")
         time.sleep(1)
         # 시작 날짜 종료 날짜 지정
-        print("시작 날짜 주입 시작", flush=True)
+        utils.printWithLogging("시작 날짜 주입 시작")
         browser.typingInputElement("xpath", '//*[@id="startDate"]', startDate, True)
-        print("종료 날짜 주입 시작", flush=True)
+        utils.printWithLogging("종료 날짜 주입 시작")
         browser.typingInputElement("xpath", '//*[@id="endDate"]', endDate, True)
         time.sleep(1)
         # 검색어 포함/제한 존재하면 적용
@@ -113,7 +114,7 @@ def crawlOpenGoKr(
         count = browser.getElement("xpath", '//*[@id="searchInfoListTotalPage"]').text
 
         if count == "0":
-            print("검색 결과가 없습니다.", flush=True)
+            utils.printWithLogging("검색 결과가 없습니다.")
             browser.close()
             return
         browser.clickElement("xpath", '//*[@id="infoList"]')
@@ -190,7 +191,7 @@ def crawlOpenGoKr(
                 "//div[@id='pagingInfo']//li[@class='on']/following-sibling::li[1]/a",
             )
             if not buttons:
-                print("다음 페이지 없음, 순회 종료", flush=True)
+                utils.printWithLogging("다음 페이지 없음, 순회 종료")
                 break
             prevEl = browser.getAllChild("css selector", "#infoList dt span.top a")[0]
             curPageIdx += 1
@@ -203,5 +204,8 @@ def crawlOpenGoKr(
         time.sleep(TIME)
 
     except Exception as e:
-        print("에러 발생:", e, flush=True)
-        traceback.print_exc()
+        utils.printWithLogging(f"에러 발생: {e}")
+        utils.printWithLogging(traceback.format_exc())
+        utils.saveLog(f"{downloadDir}/logs")
+        utils.printWithLogging(f"FAILDIRECTORY:{downloadDir}/logs")
+        raise RuntimeError("크롤링 도중 오류 발생")

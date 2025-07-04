@@ -3,6 +3,7 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font
 from openpyxl.worksheet.worksheet import Worksheet
 from typing import List, Optional, TypedDict, Union
+from utils import utils
 
 
 class Data(TypedDict):
@@ -22,7 +23,7 @@ class ExcelHelper:
                 self.ws = self.wb[sheetName]
             else:
                 self.ws = self.wb.create_sheet(sheetName)
-            print(f"Excel 데이터 로드 완료, {self.path}", flush=True)
+            utils.printWithLogging(f"Excel 데이터 로드 완료, {self.path}")
         else:
             self.wb = Workbook()
             activeWs = self.wb.active
@@ -32,7 +33,7 @@ class ExcelHelper:
             self.setData(
                 ["검색어", "기관명", "정보 제목", "단위 업무", "생산 일자", "파일 링크"]
             )
-            print(f"Excel 데이터 생성 완료, {self.path}", flush=True)
+            utils.printWithLogging(f"Excel 데이터 생성 완료, {self.path}")
 
     def setData(self, datas: List[Union[Data, str]]):
         nextRow = self.ws.max_row + 1
@@ -49,7 +50,7 @@ class ExcelHelper:
                 cell.hyperlink = url  # type: ignore
                 cell.style = "Hyperlink"
 
-            print(f"{nextRow}_{idx + 1}에 {text} 삽입 완료", flush=True)
+            utils.printWithLogging(f"{nextRow}_{idx + 1}에 {text} 삽입 완료")
 
     def setHyperlink(
         self,
@@ -69,7 +70,7 @@ class ExcelHelper:
             cell.value = displayText  # type: ignore
             cell.hyperlink = path  # type: ignore
             cell.style = "Hyperlink"
-            print(f"Excel에 {os.path.abspath(link)} 파일 연결 완료", flush=True)
+            utils.printWithLogging(f"Excel에 {os.path.abspath(link)} 파일 연결 완료")
 
         if hasMissingDownloads:
             cell = self.ws.cell(row=row, column=col + len(fileLinks))
@@ -81,7 +82,7 @@ class ExcelHelper:
         if directory and not os.path.exists(directory):
             os.makedirs(directory, exist_ok=True)
         self.wb.save(self.path)
-        print(f"{directory}에 Excel 저장 완료", flush=True)
+        utils.printWithLogging(f"{directory}에 Excel 저장 완료")
 
     def pretterColumns(self):
         ws = self.ws

@@ -31,10 +31,17 @@ export const useIPC = (type: "open-go-kr" | "nara-g2b-portal" | "computime-alert
       setIsLoading(true);
       console.log("stdout 수신:", JSON.stringify(text));
       setLog(text);
-      const match = text.match(/DIRECTORY:(.+)/);
-      if (match && match[1]) {
-        const folderDir = match[1].trim();
-        window.ipcRenderer.send(OPEN_FINDER, folderDir);
+
+      const successDir = text.match(/DIRECTORY:(.+)/);
+      const failedDir = text.match(/FAILDIRECTORY:(.+)/);
+
+      if (successDir && successDir[1]) {
+        const dir = successDir[1].trim();
+        window.ipcRenderer.send(OPEN_FINDER, dir);
+      } else if (failedDir && failedDir[1]) {
+        const dir = failedDir[1].trim();
+        console.log(`failedDir: ${dir}`);
+        window.ipcRenderer.send(OPEN_FINDER, dir);
       }
     };
 
@@ -46,7 +53,7 @@ export const useIPC = (type: "open-go-kr" | "nara-g2b-portal" | "computime-alert
     const onResult = (_: IpcRendererEvent, result: { exitCode: number }) => {
       console.log("exitCode:", result.exitCode);
       setIsLoading(false);
-      toast.success("작업이 완료되었습니다");
+      !result.exitCode ? toast.success("작업이 완료되었습니다") : toast.error("작업이 실패했습니다");
       setLog("");
     };
 

@@ -2,10 +2,12 @@ import argparse
 import sys, json
 import os
 from services.openGoKr import crawlOpenGoKr
+from utils import utils
 import io
 
-sys.stdout = io.TextIOWrapper(sys.stdout.detach(), encoding="utf-8")  # type: ignore
-sys.stderr = io.TextIOWrapper(sys.stderr.detach(), encoding="utf-8")  # type: ignore
+if sys.stdout.encoding.lower() != "utf-8":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 TYPE = ["open-go-kr", "nara-g2b-portal", "computime-alert"]
 
@@ -14,7 +16,7 @@ DIR_NAME = "excel_database"
 
 def main():
     if len(sys.argv) < 2:
-        print("사용법: '<JSON 배열 또는 객체>'", flush=True)
+        utils.printWithLogging("사용법: '<JSON 배열 또는 객체>'")
         sys.exit(1)
 
     parser = argparse.ArgumentParser()
@@ -28,10 +30,10 @@ def main():
     try:
         configs = json.loads(args.data)
     except json.JSONDecodeError:
-        print("--data 파라미터 이슈", flush=True)
+        utils.printWithLogging("--data 파라미터 이슈")
         sys.exit(1)
     if not isinstance(configs, list):
-        print("--data 파라미터 이슈", flush=True)
+        utils.printWithLogging("--data 파라미터 이슈")
         sys.exit(1)
 
     if args.type == "open-go-kr":
@@ -41,13 +43,13 @@ def main():
 
         for cfg in configs:
             crawlOpenGoKr(downloadDir, excelName, debug, **cfg)
-        print(f"DIRECTORY:{downloadDir}", flush=True)
+        utils.printWithLogging(f"DIRECTORY:{downloadDir}")
 
     elif args.type == "nara-g2b-portal":
-        print(configs, args.type, flush=True)
+        utils.printWithLogging(f"{configs} {args.type}")
         # TODO
     else:
-        print(configs, args.type, flush=True)
+        utils.printWithLogging(f"{configs} {args.type}")
         # TODO
 
 
