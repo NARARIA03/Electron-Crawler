@@ -51,6 +51,14 @@ class Selenium:
         )
 
     def clickElement(self, by: ByType, value: str) -> None:
+        self.driver.execute_script(
+            """
+                const el = document.querySelector('.rnb');
+                if (el) el.style.display = 'none';
+            """
+        )
+        utils.printWithLogging(".rnb 요소 숨김 완료")
+
         el = WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((by, value))
         )
@@ -121,6 +129,15 @@ class Selenium:
         except TimeoutException:
             utils.printWithLogging("매칭되는 다운로드 버튼이 없습니다.")
             return ([], False)
+
+        # RNB 제거!
+        self.driver.execute_script(
+            """
+            const el = document.querySelector('.rnb');
+            if (el) el.style.display = 'none';
+        """
+        )
+        utils.printWithLogging("RNB 제거 완료")
 
         # 다운로드 버튼 elements 추출
         elements = self.driver.find_elements(by, value)
