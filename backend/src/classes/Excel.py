@@ -61,22 +61,26 @@ class ExcelHelper:
         hasMissingDownloads: bool = False,
     ):
         row = self.ws.max_row
+        missingFile = False
 
         for idx, link in enumerate(fileLinks, start=0):
-            if not os.path.exists(link):
-                raise FileNotFoundError(f"링크 대상 파일을 찾을 수 없습니다: {link}")
-            path = f"file:///{os.path.abspath(link)}"
+            if os.path.exists(link):
+                path = f"file:///{os.path.abspath(link)}"
+                cell = self.ws.cell(row=row, column=col + idx)
+                cell.value = displayText  # type: ignore
+                cell.hyperlink = path  # type: ignore
+                cell.style = "Hyperlink"
+                utils.printWithLogging(
+                    f"Excel에 {os.path.abspath(link)} 파일 연결 완료"
+                )
+            else:
+                utils.printWithLogging(f"링크 대상 파일을 찾을 수 없습니다: {link}")
+                missingFile = True
 
-            cell = self.ws.cell(row=row, column=col + idx)
-            cell.value = displayText  # type: ignore
-            cell.hyperlink = path  # type: ignore
-            cell.style = "Hyperlink"
-            utils.printWithLogging(f"Excel에 {os.path.abspath(link)} 파일 연결 완료")
-
-        if hasMissingDownloads:
-            cell = self.ws.cell(row=row, column=col + len(fileLinks))
-            cell.value = "누락된 파일이 존재합니다."  # type: ignore
-            cell.font = Font(color="FFFF0000")
+        if hasMissingDownloads or missingFile:
+            warnCell = self.ws.cell(row=row, column=col + len(fileLinks))
+            warnCell.value = "누락된 파일이 존재합니다."  # type: ignore
+            warnCell.font = Font(color="FFFF0000")
 
     def save(self):
         directory = os.path.dirname(self.path)
