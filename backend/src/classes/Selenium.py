@@ -167,9 +167,7 @@ class Selenium:
                 while elapsed < timeout:
                     curFiles = set(glob.glob(os.path.join(self.downloadPath, "*")))
                     newFiles = [
-                        f
-                        for f in curFiles - existFiles
-                        if not f.endswith(".crdownload")
+                        f for f in curFiles - existFiles if isDownloadFinished(f)
                     ]
                     if len(newFiles) > 0:
                         newFiles.sort(key=os.path.getctime, reverse=True)
@@ -203,3 +201,8 @@ class Selenium:
                 hasMissingDownloads = True
 
         return (downloadedFiles, hasMissingDownloads)
+
+
+def isDownloadFinished(filePath: str) -> bool:
+    unstableExts = [".tmp", ".crdownload", ".part"]
+    return not any(filePath.endswith(ext) for ext in unstableExts)
