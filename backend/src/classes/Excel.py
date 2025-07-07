@@ -17,6 +17,7 @@ class ExcelHelper:
 
     def __init__(self, downloadDir: str, fileName: str, sheetName: str = "Sheet1"):
         self.path = os.path.join(downloadDir, fileName)
+        utils.printWithLogging(f"엑셀 파일명: {fileName}")
         if os.path.exists(self.path):
             self.wb = load_workbook(self.path)
             if sheetName in self.wb.sheetnames:
