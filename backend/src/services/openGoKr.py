@@ -9,6 +9,7 @@ from constants.index import TIME
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.common.exceptions import TimeoutException
 import traceback
 
 
@@ -166,8 +167,12 @@ def crawlOpenGoKr(
                 break
             prevEl = browser.getAllChild("css selector", "#infoList dt span.top a")[0]
             curPageIdx += 1
-            buttons[0].click()
-            browser.waitStaleness(prevEl)
+            try:
+                buttons[0].click()
+                browser.waitStaleness(prevEl)
+            except TimeoutException:
+                utils.printWithLogging("페이지 전환 없음, 순회 종료")
+                break
         browser.close()
         excel.pretterColumns()
         excel.save()
