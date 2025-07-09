@@ -148,6 +148,14 @@ def crawlOpenGoKr(
                 )
                 browser.driver.close()
                 browser.goToDefaultWindow()
+            # 여기서도 RNB 제거...
+            browser.driver.execute_script(
+                """
+            const el = document.querySelector('.rnb');
+            if (el) el.style.display = 'none';
+            """
+            )
+            utils.printWithLogging("RNB 제거 완료")
             # 페이지네이션 순회
             buttons = browser.driver.find_elements(
                 "xpath",
