@@ -56,12 +56,19 @@ def crawlOpenGoKr(
             '//*[@id="popup_wrap"]/div[2]/div[1]/table/tbody/tr/td/div/button[1]',
         )
         # 검색 결과에 organization과 location이 모두 포함된 요소 클릭
-        browser.clickElement(
-            "xpath",
-            f"//ul[contains(@class,'jstree-no-dots')]/li/a"
-            f"[contains(@title,'{location}') and "
-            f"contains(@title,'{organization}')]",
-        )
+        try:
+            browser.clickElement(
+                "xpath",
+                f"//ul[contains(@class,'jstree-no-dots')]/li/a"
+                f"[contains(@title,'{location}') and "
+                f"contains(@title,'{organization}')]",
+            )
+        except TimeoutException:
+            utils.printWithLogging(
+                f"기관+지역에 매칭되는 요소 없음. 정상 종료. {location}-{organization}"
+            )
+            browser.close()
+            return
         # 확인 버튼 클릭 (새 창 자동으로 닫힘)
         browser.clickElement("xpath", '//*[@id="popup_wrap"]/div[2]/div[2]/div[5]/a[1]')
         # 초기 윈도우로 이동 (리셋)
