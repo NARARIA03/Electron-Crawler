@@ -1,7 +1,7 @@
 import { app, BrowserWindow } from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { downloadDirIpc, downloadQueryExcel, openFinderIpc, pythonIpc } from "./ipcs";
+import { downloadDirIpc, downloadQueryExcel, openFinderIpc, pythonIpc, preventPowerSave } from "./ipcs";
 
 // const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -65,10 +65,15 @@ app.on("activate", () => {
   }
 });
 
+app.on("before-quit", () => {
+  preventPowerSave.stop();
+});
+
 app.whenReady().then(() => {
   createWindow();
   downloadDirIpc();
   pythonIpc();
   openFinderIpc();
   downloadQueryExcel();
+  preventPowerSave.start();
 });
