@@ -47,6 +47,7 @@ export const Body = () => {
     <>
       <Table>
         <Table.Caption className="text-start">
+          {query && <p className="font-bold text-red-500">인식된 행 수: {query.length}</p>}
           <p>하나의 작업만 예약/실행 가능하며, 여러 번 예약 시 마지막 예약 작업으로 덮어씌워집니다.</p>
           <p>프로그램을 종료하면 예약된 작업이 취소됩니다.</p>
           <p>예약 작업을 즉시 실행하면, 예약 작업은 취소됩니다.</p>

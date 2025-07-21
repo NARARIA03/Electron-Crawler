@@ -67,6 +67,11 @@ def crawlOpenGoKr(
             utils.printWithLogging(
                 f"기관+지역에 매칭되는 요소 없음. 정상 종료. {location}-{organization}"
             )
+            excel.notFoundData(
+                query, organization, "기관명-지역명에 매칭되는 요소가 없습니다."
+            )
+            excel.pretterColumns()
+            excel.save()
             browser.close()
             return
         # 확인 버튼 클릭 (새 창 자동으로 닫힘)
@@ -100,6 +105,9 @@ def crawlOpenGoKr(
         count = browser.getElement("xpath", '//*[@id="searchInfoListTotalPage"]').text
         if count == "0":
             utils.printWithLogging("검색 결과가 없습니다.")
+            excel.notFoundData(query, organization, "검색 결과가 0건입니다.")
+            excel.pretterColumns()
+            excel.save()
             browser.close()
             return
         browser.clickElement("xpath", '//*[@id="infoList"]')
