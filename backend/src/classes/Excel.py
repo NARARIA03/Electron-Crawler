@@ -53,6 +53,12 @@ class ExcelHelper:
 
             utils.printWithLogging(f"{nextRow}_{idx + 1}에 {text} 삽입 완료")
 
+    def notFoundData(self, query, organization, text):
+        nextRow = self.ws.max_row + 1
+        data = [query, organization, text]
+        self.ws.append(data)
+        utils.printWithLogging(f"{nextRow}에 {query}-{organization}-{text} 삽입 완료")
+
     def setHyperlink(
         self,
         fileLinks: List,
