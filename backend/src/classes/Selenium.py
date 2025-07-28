@@ -1,7 +1,13 @@
 from selenium.webdriver.remote.webelement import WebElement
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import TimeoutException, NoAlertPresentException
+from selenium.common.exceptions import (
+    TimeoutException,
+    NoAlertPresentException,
+    ElementClickInterceptedException,
+    SessionNotCreatedException,
+    WebDriverException,
+)
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from typing import List, Tuple
@@ -29,7 +35,21 @@ class Selenium:
         if debug != '"true"':
             options.add_argument("--headless")
         options.add_experimental_option("prefs", prefs)
-        self.driver = webdriver.Chrome(options=options)
+
+        # Chrome 드라이버 초기화 재시도 로직
+        retry_count = 0
+        while True:
+            try:
+                self.driver = webdriver.Chrome(options=options)
+                break
+            except (SessionNotCreatedException, WebDriverException) as e:
+                retry_count += 1
+                utils.printWithLogging(
+                    f"Chrome 드라이버 초기화 실패 ({retry_count}번째 재시도): {e}"
+                )
+                time.sleep(10)  # 재시도 전 대기
+                continue
+
         utils.printWithLogging("웹드라이버 초기 설정 성공")
         utils.printWithLogging(f"파일 다운 경로: {filesDir}")
         self.driver.get(url)
@@ -158,10 +178,14 @@ class Selenium:
 
             # 다운로드를 최대 10번 시도하는 반복문
             while attempts < 10 and not downloaded:
-                el.click()
-                utils.printWithLogging(
-                    f"[{idx}/{len(elements)}] 다운로드 버튼 클릭 ({attempts}번째)"
-                )
+                try:
+                    el.click()
+                    utils.printWithLogging(
+                        f"[{idx}/{len(elements)}] 다운로드 버튼 클릭 ({attempts}번째)"
+                    )
+                except ElementClickInterceptedException:
+                    utils.printWithLogging(f"[{idx}/{len(elements)}] 클릭 차단됨")
+                    pass
                 # 버튼 하나 클릭 후 기다린 시간
                 elapsed = 0
                 while elapsed < timeout:
