@@ -1,7 +1,11 @@
 from selenium.webdriver.remote.webelement import WebElement
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import TimeoutException, NoAlertPresentException
+from selenium.common.exceptions import (
+    TimeoutException,
+    NoAlertPresentException,
+    ElementClickInterceptedException,
+)
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 from typing import List, Tuple
@@ -158,10 +162,14 @@ class Selenium:
 
             # 다운로드를 최대 10번 시도하는 반복문
             while attempts < 10 and not downloaded:
-                el.click()
-                utils.printWithLogging(
-                    f"[{idx}/{len(elements)}] 다운로드 버튼 클릭 ({attempts}번째)"
-                )
+                try:
+                    el.click()
+                    utils.printWithLogging(
+                        f"[{idx}/{len(elements)}] 다운로드 버튼 클릭 ({attempts}번째)"
+                    )
+                except ElementClickInterceptedException:
+                    utils.printWithLogging(f"[{idx}/{len(elements)}] 클릭 차단됨")
+                    pass
                 # 버튼 하나 클릭 후 기다린 시간
                 elapsed = 0
                 while elapsed < timeout:
