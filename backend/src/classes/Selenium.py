@@ -5,6 +5,8 @@ from selenium.common.exceptions import (
     TimeoutException,
     NoAlertPresentException,
     ElementClickInterceptedException,
+    SessionNotCreatedException,
+    WebDriverException,
 )
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
@@ -33,7 +35,21 @@ class Selenium:
         if debug != '"true"':
             options.add_argument("--headless")
         options.add_experimental_option("prefs", prefs)
-        self.driver = webdriver.Chrome(options=options)
+
+        # Chrome 드라이버 초기화 재시도 로직
+        retry_count = 0
+        while True:
+            try:
+                self.driver = webdriver.Chrome(options=options)
+                break
+            except (SessionNotCreatedException, WebDriverException) as e:
+                retry_count += 1
+                utils.printWithLogging(
+                    f"Chrome 드라이버 초기화 실패 ({retry_count}번째 재시도): {e}"
+                )
+                time.sleep(10)  # 재시도 전 대기
+                continue
+
         utils.printWithLogging("웹드라이버 초기 설정 성공")
         utils.printWithLogging(f"파일 다운 경로: {filesDir}")
         self.driver.get(url)
