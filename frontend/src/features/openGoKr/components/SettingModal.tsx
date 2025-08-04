@@ -11,7 +11,7 @@ type Props = {
   onClose: () => void;
 };
 
-export const SettingModal = ({ isOpen, onClose }: Props) => {
+const SettingModal = ({ isOpen, onClose }: Props) => {
   const [downloadDir, setDownloadDir] = useState<string | null>(() => getDownloadDirectory());
   const [debug, setDebug] = useState<string | null>(() => getDebugMode());
 
@@ -56,7 +56,7 @@ export const SettingModal = ({ isOpen, onClose }: Props) => {
         onPointerDown={(e) => e.stopPropagation()}
       >
         <div className="relative flex gap-24 justify-center items-center mb-12">
-          <ArrowLeft className="absolute left-0 top-1" onClick={onClose} />
+          <ArrowLeft className="absolute left-0 top-1 hover:text-primary/60" onClick={onClose} />
           <p className="text-xl font-bold select-none">설정</p>
         </div>
         <div className="w-full h-full">
@@ -84,3 +84,5 @@ export const SettingModal = ({ isOpen, onClose }: Props) => {
     </div>
   );
 };
+
+export default SettingModal;

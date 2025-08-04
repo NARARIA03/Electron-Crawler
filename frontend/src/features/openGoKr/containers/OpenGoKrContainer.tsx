@@ -1,10 +1,13 @@
-import { Body, Header } from "../components";
+import Header from "../components/Header";
+import List from "../components/List";
 
-export const OpenGoKrContainer = () => {
+const OpenGoKrContainer = () => {
   return (
-    <div className="w-screen h-screen flex flex-col justify-center items-center p-24 gap-24">
+    <div className="w-screen flex flex-col justify-center items-center gap-12">
       <Header />
-      <Body />
+      <List />
     </div>
   );
 };
+
+export default OpenGoKrContainer;

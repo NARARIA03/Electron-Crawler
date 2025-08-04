@@ -1,22 +1,24 @@
-import { ArrowLeft, Settings } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { overlay } from "overlay-kit";
 import { H2 } from "@/components";
-import { SettingModal } from "./SettingModal";
+import { ArrowLeft, Settings } from "lucide-react";
+import { overlay } from "overlay-kit";
+import SettingModal from "./SettingModal";
+import { useNavigate } from "react-router-dom";
 
-export const Header = () => {
+const Header = () => {
   const navigate = useNavigate();
 
   const goToBack = () => navigate(-1);
 
   return (
-    <div className="w-full flex justify-between items-center">
-      <ArrowLeft className="cursor-pointer" onClick={goToBack} />
+    <div className="w-full px-12 pt-12 flex justify-between items-center">
+      <ArrowLeft className="cursor-pointer hover:text-primary/60" onClick={goToBack} />
       <H2>정보공개포털 페이지</H2>
       <Settings
-        className="cursor-pointer"
+        className="cursor-pointer hover:text-primary/60"
         onClick={() => overlay.open(({ isOpen, close }) => <SettingModal isOpen={isOpen} onClose={close} />)}
       />
     </div>
   );
 };
+
+export default Header;
