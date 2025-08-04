@@ -11,7 +11,7 @@ export const LandingPage = () => {
 
   return (
     <>
-      <H1>크롤링 서비스 (Beta)</H1>
+      <H1>크롤링 서비스</H1>
       <div className="flex justify-center items-center gap-24">
         <Button size="lg" onClick={onOpenGoKrClick}>
           <Paragraph>정보공개포털</Paragraph>

@@ -1,15 +1,7 @@
-import { Button, Input } from "@/components";
+import { Button } from "@/components";
 import { Switch } from "@/components/ui/switch";
 import { DOWNLOAD_QUERY_EXCEL, SELECT_DIRECTORY } from "@/constants/ipc";
-import { useRerendering } from "@/hooks";
-import {
-  getDebugMode,
-  getDownloadDirectory,
-  getExcelName,
-  setDebugMode,
-  setDownloadDirectory,
-  setExcelName,
-} from "@/lib/localstorage";
+import { getDebugMode, getDownloadDirectory, setDebugMode, setDownloadDirectory } from "@/lib/localstorage";
 import { ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -21,11 +13,7 @@ type Props = {
 
 export const SettingModal = ({ isOpen, onClose }: Props) => {
   const [downloadDir, setDownloadDir] = useState<string | null>(() => getDownloadDirectory());
-  const [excelFileName, setExcelFileName] = useState<string | null>(() => getExcelName());
   const [debug, setDebug] = useState<string | null>(() => getDebugMode());
-  const trigger = useRerendering();
-
-  const isExcelNameChanged = excelFileName !== getExcelName();
 
   const handleDownloadDirChange = async () => {
     try {
@@ -44,17 +32,6 @@ export const SettingModal = ({ isOpen, onClose }: Props) => {
   const handleDebugCheckedChange = (checked: boolean) => {
     setDebug(JSON.stringify(checked));
     setDebugMode(checked);
-  };
-
-  const handleExcelFileNameChange = () => {
-    if (!excelFileName) return;
-
-    const fileNameWithExtension = /\.xlsx$/i.test(excelFileName)
-      ? excelFileName
-      : excelFileName.replace(/\.[^/\\.]*$/, "") + ".xlsx";
-    setExcelFileName(fileNameWithExtension);
-    setExcelName(fileNameWithExtension);
-    trigger();
   };
 
   const handleDownloadQueryExcel = () => {
@@ -91,20 +68,6 @@ export const SettingModal = ({ isOpen, onClose }: Props) => {
             >
               {downloadDir ?? "클릭해서 경로를 설정해주세요."}
             </div>
-          </div>
-          <div className="mb-8">
-            <p className="text-zinc-600 mb-2 select-none">저장될 xlsx 파일명:</p>
-            <Input
-              className="h-10 rounded-lg border border-zinc-700 select-none cursor-pointer hover:bg-zinc-200"
-              placeholder="database.xlsx 처럼 입력해주세요"
-              value={excelFileName ?? ""}
-              onChange={(e) => setExcelFileName(e.target.value)}
-            />
-            {isExcelNameChanged && (
-              <Button className="w-full mt-2" onClick={handleExcelFileNameChange}>
-                변경사항 저장
-              </Button>
-            )}
           </div>
           <div className="mb-8">
             <p className="text-zinc-600 mb-2 select-none">검색 설정용 xlsx 다운로드:</p>
