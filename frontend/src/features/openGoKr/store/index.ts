@@ -6,9 +6,9 @@ type Store = {
   queryItems: TQueryItem[];
   addRow: () => void;
   removeRow: (id: string) => void;
-  setQuery: (id: string, newQueries: unknown[] | null) => void;
-  setscheduledTime: (id: string, newScheduledTime?: string) => void;
-  runQuery: (id: string) => void;
+  setQuery: (id: string, newQuery: TQueryItem["query"]) => void;
+  setscheduledTime: (id: string, newScheduledTime: TQueryItem["scheduledTime"]) => void;
+  setStatus: (id: string, newStatus: TQueryItem["status"]) => void;
 };
 
 const getNewQueryItem = (): TQueryItem => {
@@ -68,13 +68,11 @@ export const useOpenGoKrStore = create<Store>()((set) => ({
     });
   },
 
-  runQuery: (id) => {
+  setStatus: (id, newStatus) => {
     set(({ queryItems }) => {
-      const processId = `${id}_${Date.now().toString()}`;
-
       return {
         queryItems: queryItems.map((queryItem) =>
-          queryItem.id === id ? { ...queryItem, status: "작업중", processId } : queryItem
+          queryItem.id === id ? { ...queryItem, status: newStatus } : queryItem
         ),
       };
     });

@@ -11,7 +11,7 @@ type Props = {
 };
 
 const ListItem = ({ queryItem }: Props) => {
-  const { setQuery, setscheduledTime, removeRow } = useOpenGoKrStore();
+  const { setQuery, setscheduledTime, setStatus, removeRow } = useOpenGoKrStore();
 
   const { id, query, scheduledTime, status } = queryItem;
 
@@ -42,6 +42,7 @@ const ListItem = ({ queryItem }: Props) => {
     if (!scheduledTime) return toast.error("먼저 시작 예약 시간을 설정해주세요.");
     if (!query) return toast.error("먼저 검색 엑셀을 업로드해주세요.");
     if (status === "작업중") return toast.error("이미 작업이 진행 중입니다. 작업이 끝난 후 시도해주세요");
+    setStatus(id, "예약완료");
 
     toast.success("예약 시간에 작업이 예약되었습니다.");
     // Todo: IPC 연결
@@ -50,6 +51,7 @@ const ListItem = ({ queryItem }: Props) => {
   const handleStartNow = () => {
     if (!query) return toast.error("먼저 검색 엑셀을 업로드해주세요.");
     if (status === "작업중") return toast.error("이미 작업이 진행 중입니다. 작업이 끝난 후 시도해주세요");
+    setStatus(id, "작업중");
 
     // Todo: IPC 연결
   };
