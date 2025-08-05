@@ -5,6 +5,7 @@ import { getDebugMode, getDownloadDirectory, setDebugMode, setDownloadDirectory 
 import { ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { updateTaskAllIPC } from "../utils/ipc";
 
 type Props = {
   isOpen: boolean;
@@ -20,6 +21,7 @@ const SettingModal = ({ isOpen, onClose }: Props) => {
       const dir = (await window.ipcRenderer.invoke(SELECT_DIRECTORY)) as string | null;
       if (dir) {
         setDownloadDirectory(dir);
+        updateTaskAllIPC({ baseDir: dir });
         setDownloadDir(dir);
         toast.success("저장 경로 변경 성공");
       }
@@ -31,6 +33,7 @@ const SettingModal = ({ isOpen, onClose }: Props) => {
 
   const handleDebugCheckedChange = (checked: boolean) => {
     setDebug(JSON.stringify(checked));
+    updateTaskAllIPC({ debug: JSON.stringify(checked) });
     setDebugMode(checked);
   };
 

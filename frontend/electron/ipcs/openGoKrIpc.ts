@@ -1,32 +1,36 @@
 import { ipcMain } from "electron";
-import OpenGoKrService, { type RunTaskArgs, type ScheduleTaskArgs } from "../services/OpenGoKrService";
+import OpenGoKrService, { type Task } from "../services/OpenGoKrService";
 
 export const openGoKrIpc = () => {
+  /** READ */
   ipcMain.handle("openGoKr:getAllTasks", () => {
     return OpenGoKrService.getAllTasks();
   });
 
-  ipcMain.handle("openGoKr:getTask", (_, id: string) => {
-    return OpenGoKrService.getTask(id);
+  /** CREATE */
+  ipcMain.handle("openGoKr:addTask", (_, task: Task) => {
+    return OpenGoKrService.addTask(task);
   });
 
-  ipcMain.handle("openGoKr:runTask", (_, args: RunTaskArgs) => {
-    try {
-      return { success: true, id: OpenGoKrService.runTask(args) };
-    } catch (error) {
-      return { success: false, error: error instanceof Error ? error.message : String(error) };
-    }
+  /** UPDATE */
+  ipcMain.handle("openGoKr:updateTask", (_, id: string, newValue: Partial<Task>) => {
+    return OpenGoKrService.updateTask(id, newValue);
   });
 
-  ipcMain.handle("openGoKr:scheduleTask", (_, args: ScheduleTaskArgs) => {
-    try {
-      return { success: true, id: OpenGoKrService.scheduleTask(args) };
-    } catch (error) {
-      return { success: false, error: error instanceof Error ? error.message : String(error) };
-    }
+  ipcMain.handle("openGoKr:updateTaskAll", (_, newValue: Partial<Task>) => {
+    return OpenGoKrService.updateTaskAll(newValue);
   });
 
+  /** DELETE */
   ipcMain.handle("openGoKr:cancelTask", (_, id: string) => {
-    return { success: OpenGoKrService.cancelTask(id) };
+    return OpenGoKrService.cancelTask(id);
+  });
+
+  ipcMain.handle("openGoKr:runTask", (_, id: string) => {
+    return OpenGoKrService.runTask(id);
+  });
+
+  ipcMain.handle("openGoKr:scheduleTask", (_, id: string) => {
+    return OpenGoKrService.scheduleTask(id);
   });
 };

@@ -1,10 +1,32 @@
 import { Button, Table } from "@/components";
-import { useOpenGoKrStore } from "../store";
 import { Plus } from "lucide-react";
 import ListItem from "./ListItem";
+import { useEffect, useState } from "react";
+import type { Task } from "../types";
+import { addRowIPC, getAllTasksIPC } from "../utils/ipc";
 
 const List = () => {
-  const { queryItems, addRow } = useOpenGoKrStore();
+  const [tasks, setTasks] = useState<Task[]>([]);
+
+  // 초기 데이터 로드
+  useEffect(() => {
+    (async () => {
+      const tasks = await getAllTasksIPC();
+      setTasks(tasks);
+    })();
+  }, []);
+
+  // 데이터 변경 감지 -> 업데이트
+  useEffect(() => {
+    const handleUpdate = (_: unknown, tasks: Task[]) => {
+      setTasks(tasks);
+    };
+
+    window.ipcRenderer.on("openGoKr:notifyUpdate", handleUpdate);
+    return () => {
+      window.ipcRenderer.off("openGoKr:notifyUpdate", handleUpdate);
+    };
+  }, []);
 
   return (
     <>
@@ -13,7 +35,7 @@ const List = () => {
           <p>각 행별로 독립적인 예약/실행이 가능합니다.</p>
           <p>프로그램을 종료하면 예약/실행 중인 작업이 모두 취소됩니다.</p>
         </div>
-        <Button onClick={addRow} className="flex items-center gap-2">
+        <Button onClick={addRowIPC} className="flex items-center gap-2">
           <Plus size={16} />
           검색 행 추가
         </Button>
@@ -32,8 +54,8 @@ const List = () => {
             </Table.Row>
           </Table.Header>
           <Table.Body>
-            {queryItems.map((queryItem) => (
-              <ListItem key={queryItem.id} queryItem={queryItem} />
+            {tasks.map((task) => (
+              <ListItem key={task.id} task={task} />
             ))}
           </Table.Body>
         </Table>
