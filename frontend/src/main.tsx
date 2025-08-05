@@ -8,7 +8,7 @@ import { OverlayProvider } from "overlay-kit";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <div className="w-screen h-screen flex flex-col justify-center items-center gap-24 bg-white">
+    <div className="flex flex-col justify-center items-center gap-24 bg-white">
       <OverlayProvider>
         <HashRouter>
           <Routes>

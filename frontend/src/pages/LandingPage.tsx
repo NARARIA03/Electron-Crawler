@@ -10,8 +10,8 @@ export const LandingPage = () => {
   const handleNotImplementedClick = () => toast.warning("아직 구현 중인 기능입니다.");
 
   return (
-    <>
-      <H1>크롤링 서비스 (Beta)</H1>
+    <div className="flex flex-col justify-center items-center gap-32 mt-36">
+      <H1>크롤링 서비스</H1>
       <div className="flex justify-center items-center gap-24">
         <Button size="lg" onClick={onOpenGoKrClick}>
           <Paragraph>정보공개포털</Paragraph>
@@ -23,6 +23,6 @@ export const LandingPage = () => {
           <Paragraph>나라장터</Paragraph>
         </Button>
       </div>
-    </>
+    </div>
   );
 };
