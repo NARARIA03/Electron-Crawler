@@ -6,9 +6,9 @@ type Store = {
   queryItems: TQueryItem[];
   addRow: () => void;
   removeRow: (id: string) => void;
-  setQuery: (id: string, newQuery: TQueryItem["query"]) => void;
-  setscheduledTime: (id: string, newScheduledTime: TQueryItem["scheduledTime"]) => void;
-  setStatus: (id: string, newStatus: TQueryItem["status"]) => void;
+  setQuery: (id: string, query: TQueryItem["query"]) => void;
+  setscheduledTime: (id: string, scheduledTime: TQueryItem["scheduledTime"]) => void;
+  setStatus: (id: string, status: TQueryItem["status"]) => void;
 };
 
 const getNewQueryItem = (): TQueryItem => {
@@ -48,32 +48,26 @@ export const useOpenGoKrStore = create<Store>()((set) => ({
     });
   },
 
-  setQuery: (id, newQuery) => {
+  setQuery: (id, query) => {
     set(({ queryItems }) => {
       return {
-        queryItems: queryItems.map((queryItem) =>
-          queryItem.id === id ? { ...queryItem, query: newQuery } : queryItem
-        ),
+        queryItems: queryItems.map((queryItem) => (queryItem.id === id ? { ...queryItem, query } : queryItem)),
       };
     });
   },
 
-  setscheduledTime: (id, newScheduledTime) => {
+  setscheduledTime: (id, scheduledTime) => {
     set(({ queryItems }) => {
       return {
-        queryItems: queryItems.map((queryItem) =>
-          queryItem.id === id ? { ...queryItem, scheduledTime: newScheduledTime } : queryItem
-        ),
+        queryItems: queryItems.map((queryItem) => (queryItem.id === id ? { ...queryItem, scheduledTime } : queryItem)),
       };
     });
   },
 
-  setStatus: (id, newStatus) => {
+  setStatus: (id, status) => {
     set(({ queryItems }) => {
       return {
-        queryItems: queryItems.map((queryItem) =>
-          queryItem.id === id ? { ...queryItem, status: newStatus } : queryItem
-        ),
+        queryItems: queryItems.map((queryItem) => (queryItem.id === id ? { ...queryItem, status } : queryItem)),
       };
     });
   },

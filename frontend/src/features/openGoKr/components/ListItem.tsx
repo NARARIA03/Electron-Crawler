@@ -2,29 +2,36 @@ import { Input, Table } from "@/components";
 import type { TQueryItem } from "../types";
 import { Play, Send, Trash2 } from "lucide-react";
 import { useOpenGoKrStore } from "../store";
-import { ChangeEvent } from "react";
+import { ChangeEvent, useState } from "react";
 import { toast } from "sonner";
 import { parseExcelQuery } from "../utils";
+import { useOpenGoKrIpc } from "../hooks/useOpenGoKrIpc";
+import { getDebugMode, getDownloadDirectory } from "@/lib/localstorage";
 
 type Props = {
   queryItem: TQueryItem;
 };
 
 const ListItem = ({ queryItem }: Props) => {
+  const [fileName, setFileName] = useState<string | null>(null);
   const { setQuery, setscheduledTime, setStatus, removeRow } = useOpenGoKrStore();
+  const { runTask, scheduleTask, cancelTask } = useOpenGoKrIpc();
 
   const { id, query, scheduledTime, status } = queryItem;
 
   const statusColor = (() => {
     if (status === "대기중") return "text-gray-400";
     if (status === "예약완료") return "text-blue-400";
-    if (status === "작업중") return "text-red-400";
+    if (status === "작업중") return "text-orange-400";
     if (status === "작업완료") return "text-green-400";
+    if (status === "작업실패") return "text-red-400";
   })();
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    setFileName(file.name);
 
     try {
       const parsedQuery = await parseExcelQuery(file);
@@ -32,28 +39,48 @@ const ListItem = ({ queryItem }: Props) => {
       toast.success("정상적으로 검색 엑셀을 불러왔습니다.");
       console.log(parsedQuery);
     } catch (error) {
+      setFileName(null);
       setQuery(id, null);
       console.error("엑셀 파싱 오류", error);
       toast.error(`엑셀 형식이 잘못되었습니다. 확인 후 재업로드해주세요. 에러 메시지: ${error}`);
     }
   };
 
-  const handleStartAfter = () => {
+  const handleStartAfter = async () => {
     if (!scheduledTime) return toast.error("먼저 시작 예약 시간을 설정해주세요.");
-    if (!query) return toast.error("먼저 검색 엑셀을 업로드해주세요.");
+    if (!query || !fileName) return toast.error("검색 엑셀을 다시 업로드해주세요.");
     if (status === "작업중") return toast.error("이미 작업이 진행 중입니다. 작업이 끝난 후 시도해주세요");
-    setStatus(id, "예약완료");
 
+    await scheduleTask({
+      id,
+      data: query,
+      baseDir: getDownloadDirectory(),
+      excelName: fileName,
+      debug: getDebugMode(),
+      scheduledTime: scheduledTime,
+    });
+    setStatus(id, "예약완료");
     toast.success("예약 시간에 작업이 예약되었습니다.");
-    // Todo: IPC 연결
   };
 
-  const handleStartNow = () => {
+  const handleStartNow = async () => {
     if (!query) return toast.error("먼저 검색 엑셀을 업로드해주세요.");
     if (status === "작업중") return toast.error("이미 작업이 진행 중입니다. 작업이 끝난 후 시도해주세요");
-    setStatus(id, "작업중");
 
-    // Todo: IPC 연결
+    await runTask({
+      id,
+      data: query,
+      baseDir: getDownloadDirectory(),
+      excelName: fileName,
+      debug: getDebugMode(),
+    });
+    setStatus(id, "작업중");
+    toast.success("작업을 수행 중입니다.");
+  };
+
+  const handleCancelTask = async () => {
+    await cancelTask(id);
+    removeRow(id);
   };
 
   return (
@@ -94,7 +121,7 @@ const ListItem = ({ queryItem }: Props) => {
         <span className={`text-xs ${statusColor}`}>{status}</span>
       </Table.Cell>
       <Table.Cell>
-        <Trash2 className="cursor-pointer hover:text-red-500" size={20} onClick={() => removeRow(id)} />
+        <Trash2 className="cursor-pointer hover:text-red-500" size={20} onClick={handleCancelTask} />
       </Table.Cell>
     </Table.Row>
   );

@@ -1,7 +1,8 @@
 import { app, BrowserWindow } from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { downloadDirIpc, downloadQueryExcel, openFinderIpc, pythonIpc, preventPowerSave } from "./ipcs";
+import { downloadDirIpc, downloadQueryExcel, openFinderIpc, preventPowerSave } from "./ipcs";
+import { openGoKrIpc } from "./ipcs/openGoKrIpc";
 
 // const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -72,7 +73,7 @@ app.on("before-quit", () => {
 app.whenReady().then(() => {
   createWindow();
   downloadDirIpc();
-  pythonIpc();
+  openGoKrIpc();
   openFinderIpc();
   downloadQueryExcel();
   preventPowerSave.start();
