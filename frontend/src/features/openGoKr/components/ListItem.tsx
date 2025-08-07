@@ -46,8 +46,9 @@ const ListItem = ({ task }: Props) => {
     if (!file) return;
 
     try {
+      const parsedExcelName = file.name.replace(/^query/, "");
       const parsedQuery = await parseExcelQuery(file);
-      await setTaskQueryIPC(id, file.name, parsedQuery);
+      await setTaskQueryIPC(id, parsedExcelName, parsedQuery);
       toast.success("검색 엑셀 로드 성공.");
       console.log(parsedQuery);
     } catch (error) {
@@ -109,7 +110,12 @@ const ListItem = ({ task }: Props) => {
   return (
     <Table.Row>
       <Table.Cell className="w-[150px]">
-        <Input type="file" accept=".xlsx, .xls" className="w-[150px]" onChange={handleFileChange} />
+        <label className="cursor-pointer block w-[150px]">
+          <input type="file" accept=".xlsx, .xls" className="hidden" onChange={handleFileChange} />
+          <div className="text-xs p-2 border rounded hover:bg-gray-50 truncate">
+            {excelName || "클릭해서 파일 업로드"}
+          </div>
+        </label>
       </Table.Cell>
       <Table.Cell className="w-[200px]">
         <Input type="datetime-local" className="w-[200px]" value={time} onChange={handleScheduledTimeChange} />

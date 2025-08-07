@@ -2,7 +2,6 @@ import argparse
 import sys, json
 import os
 from services.openGoKr import crawlOpenGoKr
-from utils import utils
 import io
 
 if sys.stdout.encoding.lower() != "utf-8":
@@ -14,7 +13,7 @@ DIR_NAME = "excel_database"
 
 def main():
     if len(sys.argv) < 2:
-        utils.printWithLogging("사용법: '<JSON 배열 또는 객체>'")
+        print("사용법: '<JSON 배열 또는 객체>'", flush=True)
         sys.exit(1)
 
     parser = argparse.ArgumentParser()
@@ -27,19 +26,18 @@ def main():
     try:
         configs = json.loads(args.data)
     except json.JSONDecodeError:
-        utils.printWithLogging("--data 파라미터 이슈")
+        print("--data 파라미터 이슈", flush=True)
         sys.exit(1)
     if not isinstance(configs, list):
-        utils.printWithLogging("--data 파라미터 이슈")
+        print("--data 파라미터 이슈", flush=True)
         sys.exit(1)
 
     debug = args.debug
     excelName = args.excelName
     downloadDir = os.path.join(args.baseDir, DIR_NAME, excelName.split(".")[0])
 
-    for cfg in configs:
-        crawlOpenGoKr(downloadDir, excelName, debug, **cfg)
-        utils.printWithLogging(f"DIRECTORY:{downloadDir}")
+    crawlOpenGoKr(downloadDir, excelName, debug, configs)
+    print(f"DIRECTORY:{downloadDir}", flush=True)
 
 
 if __name__ == "__main__":

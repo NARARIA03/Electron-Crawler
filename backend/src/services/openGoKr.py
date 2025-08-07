@@ -1,7 +1,6 @@
 from classes.Selenium import Selenium
 from selenium.webdriver.common.keys import Keys
 from classes.Excel import ExcelHelper
-from utils import utils
 import time
 import re
 from typing import Optional
@@ -17,19 +16,70 @@ def crawlOpenGoKr(
     downloadDir: str,
     excelName: str,
     debug: str,
+    configs: list,
+) -> None:
+    browser = None
+    try:
+        browser = Selenium(
+            "https://www.open.go.kr/com/main/mainView.do", downloadDir, debug
+        )
+
+        for config in configs:
+            try:
+                query = config.get("query", "")
+                organization = config.get("organization", "")
+                location = config.get("location", "")
+                startDate = config.get("startDate", "")
+                endDate = config.get("endDate", "")
+                include = config.get("include")
+                exclude = config.get("exclude")
+
+                excel = ExcelHelper(downloadDir, excelName)
+
+                crawlSingleConfig(
+                    browser,
+                    excel,
+                    query,
+                    organization,
+                    location,
+                    startDate,
+                    endDate,
+                    include,
+                    exclude,
+                    downloadDir,
+                )
+
+            except Exception as config_error:
+                print(
+                    f"Config 처리 중 에러 발생 ({organization}): {config_error}",
+                    flush=True,
+                )
+                continue
+
+    except Exception as e:
+        print(f"전체 크롤링 에러: {e}", flush=True)
+        print(traceback.format_exc(), flush=True)
+        print(f"FAILDIRECTORY:{downloadDir}/logs", flush=True)
+        raise RuntimeError("크롤링 도중 오류 발생")
+    finally:
+        if browser:
+            browser.close()
+
+
+def crawlSingleConfig(
+    browser: Selenium,
+    excel: ExcelHelper,
     query: str,
     organization: str,
     location: str,
     startDate: str,
     endDate: str,
-    include: Optional[str] = None,
-    exclude: Optional[str] = None,
+    include: Optional[str],
+    exclude: Optional[str],
+    downloadDir: str,
 ) -> None:
     try:
-        browser = Selenium(
-            "https://www.open.go.kr/com/main/mainView.do", downloadDir, debug
-        )
-        excel = ExcelHelper(downloadDir, excelName)
+        browser.driver.get("https://www.open.go.kr/com/main/mainView.do")
         # 검색어 입력
         browser.typingInputElement("xpath", '//*[@id="m_input"]', query)
         # 검색 버튼 클릭
@@ -64,8 +114,9 @@ def crawlOpenGoKr(
                 f"contains(@title,'{organization}')]",
             )
         except TimeoutException:
-            utils.printWithLogging(
-                f"기관+지역에 매칭되는 요소 없음. 정상 종료. {location}-{organization}"
+            print(
+                f"기관+지역에 매칭되는 요소 없음. 정상 종료. {location}-{organization}",
+                flush=True,
             )
             excel.notFoundData(
                 query, organization, "기관명-지역명에 매칭되는 요소가 없습니다."
@@ -81,9 +132,9 @@ def crawlOpenGoKr(
         # iframe에 focus
         browser.focusIframe("id", "modalIfm")
         # 시작 날짜 종료 날짜 지정
-        utils.printWithLogging("시작 날짜 주입 시작")
+        print("시작 날짜 주입 시작", flush=True)
         browser.typingInputElement("xpath", '//*[@id="startDate"]', startDate, True)
-        utils.printWithLogging("종료 날짜 주입 시작")
+        print("종료 날짜 주입 시작", flush=True)
         browser.typingInputElement("xpath", '//*[@id="endDate"]', endDate, True)
         # 검색어 포함/제한 존재하면 적용
         if include != "null":
@@ -104,7 +155,7 @@ def crawlOpenGoKr(
         # 검색 결과가 하나라도 있으면, 더보기 버튼 클릭
         count = browser.getElement("xpath", '//*[@id="searchInfoListTotalPage"]').text
         if count == "0":
-            utils.printWithLogging("검색 결과가 없습니다.")
+            print("검색 결과가 없습니다.", flush=True)
             excel.notFoundData(query, organization, "검색 결과가 0건입니다.")
             excel.pretterColumns()
             excel.save()
@@ -171,14 +222,14 @@ def crawlOpenGoKr(
             if (el) el.style.display = 'none';
             """
             )
-            utils.printWithLogging("RNB 제거 완료")
+            print("RNB 제거 완료", flush=True)
             # 페이지네이션 순회
             buttons = browser.driver.find_elements(
                 "xpath",
                 "//div[@id='pagingInfo']//li[@class='on']/following-sibling::li[1]/a",
             )
             if not buttons:
-                utils.printWithLogging("다음 페이지 없음, 순회 종료")
+                print("다음 페이지 없음, 순회 종료", flush=True)
                 break
             prevEl = browser.getAllChild("css selector", "#infoList dt span.top a")[0]
             curPageIdx += 1
@@ -186,16 +237,17 @@ def crawlOpenGoKr(
                 buttons[0].click()
                 browser.waitStaleness(prevEl)
             except TimeoutException:
-                utils.printWithLogging("페이지 전환 없음, 순회 종료")
+                print("페이지 전환 없음, 순회 종료", flush=True)
                 break
-        browser.close()
         excel.pretterColumns()
         excel.save()
         time.sleep(TIME)
 
     except Exception as e:
-        utils.printWithLogging(f"에러 발생: {e}")
-        utils.printWithLogging(traceback.format_exc())
-        utils.saveLog(f"{downloadDir}/logs")
-        utils.printWithLogging(f"FAILDIRECTORY:{downloadDir}/logs")
-        raise RuntimeError("크롤링 도중 오류 발생")
+        print(f"단일 Config 크롤링 에러 ({organization}): {e}", flush=True)
+        print(traceback.format_exc(), flush=True)
+        if excel:
+            excel.notFoundData(query, organization, f"크롤링 중 에러 발생: {str(e)}")
+            excel.pretterColumns()
+            excel.save()
+        raise e

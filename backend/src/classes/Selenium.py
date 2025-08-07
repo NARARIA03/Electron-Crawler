@@ -15,7 +15,6 @@ import os
 import time
 import glob
 from constants.index import TIME, ByType
-from utils import utils
 
 
 class Selenium:
@@ -31,7 +30,7 @@ class Selenium:
         }
 
         options = Options()
-        utils.printWithLogging(debug)
+        print(debug, flush=True)
         if debug != '"true"':
             options.add_argument("--headless")
         options.add_experimental_option("prefs", prefs)
@@ -44,24 +43,25 @@ class Selenium:
                 break
             except (SessionNotCreatedException, WebDriverException) as e:
                 retry_count += 1
-                utils.printWithLogging(
-                    f"Chrome 드라이버 초기화 실패 ({retry_count}번째 재시도): {e}"
+                print(
+                    f"Chrome 드라이버 초기화 실패 ({retry_count}번째 재시도): {e}",
+                    flush=True,
                 )
                 time.sleep(10)  # 재시도 전 대기
                 continue
 
-        utils.printWithLogging("웹드라이버 초기 설정 성공")
-        utils.printWithLogging(f"파일 다운 경로: {filesDir}")
+        print("웹드라이버 초기 설정 성공", flush=True)
+        print(f"파일 다운 경로: {filesDir}", flush=True)
         self.driver.get(url)
         self.wait = WebDriverWait(self.driver, 10)
         self.downloadPath = filesDir
         time.sleep(TIME)
         self.curWindowHandle = self.driver.current_window_handle
-        utils.printWithLogging(f"현재 페이지: {self.driver.current_url}")
+        print(f"현재 페이지: {self.driver.current_url}", flush=True)
 
     def close(self) -> None:
         self.driver.quit()
-        utils.printWithLogging("웹드라이버 종료 완료")
+        print("웹드라이버 종료 완료", flush=True)
 
     def getElement(self, by: ByType, value: str) -> WebElement:
         return (
@@ -77,13 +77,13 @@ class Selenium:
                 if (el) el.style.display = 'none';
             """
         )
-        utils.printWithLogging(".rnb 요소 숨김 완료")
+        print(".rnb 요소 숨김 완료", flush=True)
 
         el = WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((by, value))
         )
         self.driver.execute_script("arguments[0].click();", el)
-        utils.printWithLogging("요소 클릭 완료")
+        print("요소 클릭 완료", flush=True)
 
     def typingInputElement(
         self, by: ByType, value: str, input: str, replace: bool = False
@@ -94,19 +94,19 @@ class Selenium:
         if replace:
             element.clear()
             element.send_keys(input)
-            return utils.printWithLogging("대체 완료")
+            return print("대체 완료", flush=True)
         element.send_keys(input)
-        return utils.printWithLogging("입력 완료")
+        return print("입력 완료", flush=True)
 
     def focusIframe(self, by: ByType, value: str) -> None:
         WebDriverWait(self.driver, 10).until(
             EC.frame_to_be_available_and_switch_to_it((by, value))
         )
-        utils.printWithLogging("iframe 전환 완료")
+        print("iframe 전환 완료", flush=True)
 
     def unfocusIframe(self) -> None:
         self.driver.switch_to.default_content()
-        utils.printWithLogging("기본 컨텐츠로 전환 완료")
+        print("기본 컨텐츠로 전환 완료", flush=True)
 
     def goToNewWindow(self, by: ByType, value: str) -> None:
         originalHandles = set(self.driver.window_handles)
@@ -122,11 +122,11 @@ class Selenium:
             raise RuntimeError("새 창 전환 실패: 새로운 윈도우를 찾을 수 없습니다")
 
         self.driver.switch_to.window(newHandle.pop())
-        utils.printWithLogging("새 윈도우로 전환 완료")
+        print("새 윈도우로 전환 완료", flush=True)
 
     def goToDefaultWindow(self) -> None:
         self.driver.switch_to.window(self.curWindowHandle)
-        utils.printWithLogging("초기 윈도우로 이동 완료")
+        print("초기 윈도우로 이동 완료", flush=True)
 
     def getAllChild(self, by: ByType, value: str) -> List[WebElement]:
         elements = WebDriverWait(self.driver, 10).until(
@@ -141,13 +141,13 @@ class Selenium:
         self, by: ByType, value: str, timeout: int = 60
     ) -> Tuple[List, bool]:
         # element가 모두 로드될 때까지 대기
-        utils.printWithLogging(f"현재 페이지: {self.driver.current_url}")
+        print(f"현재 페이지: {self.driver.current_url}", flush=True)
         try:
             WebDriverWait(self.driver, 5).until(
                 EC.presence_of_all_elements_located((by, value))
             )
         except TimeoutException:
-            utils.printWithLogging("매칭되는 다운로드 버튼이 없습니다.")
+            print("매칭되는 다운로드 버튼이 없습니다.", flush=True)
             return ([], False)
 
         # RNB 제거!
@@ -157,7 +157,7 @@ class Selenium:
             if (el) el.style.display = 'none';
         """
         )
-        utils.printWithLogging("RNB 제거 완료")
+        print("RNB 제거 완료", flush=True)
 
         # 다운로드 버튼 elements 추출
         elements = self.driver.find_elements(by, value)
@@ -180,11 +180,12 @@ class Selenium:
             while attempts < 10 and not downloaded:
                 try:
                     el.click()
-                    utils.printWithLogging(
-                        f"[{idx}/{len(elements)}] 다운로드 버튼 클릭 ({attempts}번째)"
+                    print(
+                        f"[{idx}/{len(elements)}] 다운로드 버튼 클릭 ({attempts}번째)",
+                        flush=True,
                     )
                 except ElementClickInterceptedException:
-                    utils.printWithLogging(f"[{idx}/{len(elements)}] 클릭 차단됨")
+                    print(f"[{idx}/{len(elements)}] 클릭 차단됨", flush=True)
                     pass
                 # 버튼 하나 클릭 후 기다린 시간
                 elapsed = 0
@@ -196,8 +197,9 @@ class Selenium:
                     if len(newFiles) > 0:
                         newFiles.sort(key=os.path.getctime, reverse=True)
                         downloadedFiles.append(newFiles[0])
-                        utils.printWithLogging(
-                            f"[{idx}/{len(elements)}] 다운로드 완료: {newFiles[0]}"
+                        print(
+                            f"[{idx}/{len(elements)}] 다운로드 완료: {newFiles[0]}",
+                            flush=True,
                         )
                         downloaded = True
                         break
@@ -205,8 +207,9 @@ class Selenium:
                     try:
                         alert = self.driver.switch_to.alert
                         alert.accept()
-                        utils.printWithLogging(
+                        print(
                             f"[{idx}/{len(elements)}] 다운로드 실패 alert 확인, 재시도 예정",
+                            flush=True,
                         )
                         break
                     except NoAlertPresentException:
@@ -219,8 +222,9 @@ class Selenium:
                     attempts += 1
                     time.sleep(1)
             if not downloaded:
-                utils.printWithLogging(
+                print(
                     f"[{idx}/{len(elements)}] 다운로드 실패: {attempts}회 재시도 후에도 완료되지 않음",
+                    flush=True,
                 )
                 hasMissingDownloads = True
 

@@ -3,7 +3,6 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font
 from openpyxl.worksheet.worksheet import Worksheet
 from typing import List, Optional, TypedDict, Union
-from utils import utils
 
 
 class Data(TypedDict):
@@ -17,14 +16,14 @@ class ExcelHelper:
 
     def __init__(self, downloadDir: str, fileName: str, sheetName: str = "Sheet1"):
         self.path = os.path.join(downloadDir, fileName)
-        utils.printWithLogging(f"엑셀 파일명: {fileName}")
+        print(f"엑셀 파일명: {fileName}", flush=True)
         if os.path.exists(self.path):
             self.wb = load_workbook(self.path)
             if sheetName in self.wb.sheetnames:
                 self.ws = self.wb[sheetName]
             else:
                 self.ws = self.wb.create_sheet(sheetName)
-            utils.printWithLogging(f"Excel 데이터 로드 완료, {self.path}")
+            print(f"Excel 데이터 로드 완료, {self.path}", flush=True)
         else:
             self.wb = Workbook()
             activeWs = self.wb.active
@@ -34,7 +33,7 @@ class ExcelHelper:
             self.setData(
                 ["검색어", "기관명", "정보 제목", "단위 업무", "생산 일자", "파일 링크"]
             )
-            utils.printWithLogging(f"Excel 데이터 생성 완료, {self.path}")
+            print(f"Excel 데이터 생성 완료, {self.path}", flush=True)
 
     def setData(self, datas: List[Union[Data, str]]):
         nextRow = self.ws.max_row + 1
@@ -51,13 +50,13 @@ class ExcelHelper:
                 cell.hyperlink = url  # type: ignore
                 cell.style = "Hyperlink"
 
-            utils.printWithLogging(f"{nextRow}_{idx + 1}에 {text} 삽입 완료")
+            print(f"{nextRow}_{idx + 1}에 {text} 삽입 완료", flush=True)
 
     def notFoundData(self, query, organization, text):
         nextRow = self.ws.max_row + 1
         data = [query, organization, text]
         self.ws.append(data)
-        utils.printWithLogging(f"{nextRow}에 {query}-{organization}-{text} 삽입 완료")
+        print(f"{nextRow}에 {query}-{organization}-{text} 삽입 완료", flush=True)
 
     def setHyperlink(
         self,
@@ -76,11 +75,12 @@ class ExcelHelper:
                 cell.value = displayText  # type: ignore
                 cell.hyperlink = path  # type: ignore
                 cell.style = "Hyperlink"
-                utils.printWithLogging(
-                    f"Excel에 {os.path.abspath(link)} 파일 연결 완료"
+                print(
+                    f"Excel에 {os.path.abspath(link)} 파일 연결 완료",
+                    flush=True,
                 )
             else:
-                utils.printWithLogging(f"링크 대상 파일을 찾을 수 없습니다: {link}")
+                print(f"링크 대상 파일을 찾을 수 없습니다: {link}", flush=True)
                 missingFile = True
 
         if hasMissingDownloads or missingFile:
@@ -93,7 +93,7 @@ class ExcelHelper:
         if directory and not os.path.exists(directory):
             os.makedirs(directory, exist_ok=True)
         self.wb.save(self.path)
-        utils.printWithLogging(f"{directory}에 Excel 저장 완료")
+        print(f"{directory}에 Excel 저장 완료", flush=True)
 
     def pretterColumns(self):
         ws = self.ws

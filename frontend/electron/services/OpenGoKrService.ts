@@ -1,5 +1,6 @@
 import { app, BrowserWindow, shell } from "electron";
 import { type ChildProcess, spawn } from "node:child_process";
+import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -11,6 +12,7 @@ export type Task = {
   scheduledTime?: Date;
   status: "대기중" | "예약완료" | "작업중" | "작업완료" | "작업실패" | "취소됨";
   process?: ChildProcess;
+  logStream?: fs.WriteStream;
   debug: string | null;
 };
 
@@ -21,7 +23,7 @@ class OpenGoKrService {
 
   /** READ */
   public static getAllTasks() {
-    return [...this.tasks.values()].map(({ process: _, ...rest }) => rest);
+    return [...this.tasks.values()].map(({ process: _, logStream: __, ...rest }) => rest);
   }
 
   /** CREATE */
@@ -67,7 +69,10 @@ class OpenGoKrService {
     // 실행 중 작업 -> 실행 종료, 태스크 리스트에는 유지, 취소됨 상태로 변경 -> 어차피 error에서 캐치되면서 실패로 바뀜, 이후 UI 반영
     if (task.process) {
       task.process.kill();
-      this.updateTask(id, { status: "취소됨", process: undefined });
+      if (task.logStream) {
+        task.logStream.end();
+      }
+      this.updateTask(id, { status: "취소됨", process: undefined, logStream: undefined });
       return true;
     }
 
@@ -80,6 +85,13 @@ class OpenGoKrService {
   public static runTask(id: string) {
     const task = this.tasks.get(id);
     if (!task) throw new Error("id에 해당하는 태스크가 존재하지 않습니다");
+
+    // 기존에 예약되어 있던 작업이 있다면 취소
+    const timer = this.scheduledTasks.get(id);
+    if (timer) {
+      clearTimeout(timer);
+      this.scheduledTasks.delete(id);
+    }
 
     this.executeTask(id);
     return id;
@@ -100,6 +112,7 @@ class OpenGoKrService {
     }, delay);
 
     this.scheduledTasks.set(id, timer);
+    this.updateTask(id, { status: "예약완료" });
 
     return id;
   }
@@ -118,6 +131,28 @@ class OpenGoKrService {
     if (!task.baseDir) throw new Error("기본 저장 경로가 설정되지 않았습니다");
     if (!task.excelName || !task.data) throw new Error("엑셀을 정상적으로 인식하지 못했습니다");
 
+    // 로그 파일 경로 생성
+    const defaultDirName = "excel_database";
+    const excelBaseName = task.excelName.split(".")[0];
+    const logDir = path.join(task.baseDir, defaultDirName, excelBaseName);
+    const today = new Date();
+    const dateString = `${today.getFullYear()}_${String(today.getMonth() + 1).padStart(2, "0")}_${String(
+      today.getDate()
+    ).padStart(2, "0")}`;
+    const logFileName = `${dateString}_logs.txt`;
+    const logFilePath = path.join(logDir, logFileName);
+
+    // 로그 디렉토리 생성
+    try {
+      if (!fs.existsSync(logDir)) {
+        fs.mkdirSync(logDir, { recursive: true });
+      }
+      const logStream = fs.createWriteStream(logFilePath, { flags: "a" });
+      this.updateTask(id, { logStream });
+    } catch (error) {
+      console.error(`로그 파일 생성 실패: ${error}`);
+    }
+
     const child = spawn(exePath, [
       "--baseDir",
       task.baseDir,
@@ -133,6 +168,17 @@ class OpenGoKrService {
 
     child.stdout.on("data", (chunk: Buffer) => {
       const text = chunk.toString("utf-8");
+      const currentTask = this.tasks.get(id);
+
+      // 로그 파일에 쓰기
+      if (currentTask?.logStream) {
+        const now = new Date();
+        const timeString = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(
+          2,
+          "0"
+        )}:${String(now.getSeconds()).padStart(2, "0")}`;
+        currentTask.logStream.write(`[${timeString}]: ${text}\n`);
+      }
 
       const successDir = text.match(/DIRECTORY:(.+)/);
       const failedDir = text.match(/FAILDIRECTORY:(.+)/);
@@ -142,17 +188,24 @@ class OpenGoKrService {
         shell.openPath(dir);
       } else if (failedDir && failedDir[1]) {
         const dir = failedDir[1].trim();
-        console.log(`failedDir: ${dir}`);
         shell.openPath(dir);
       }
     });
 
     child.on("close", (code: number) => {
-      this.updateTask(id, { status: code === 0 ? "작업완료" : "작업실패", process: undefined });
+      const currentTask = this.tasks.get(id);
+      if (currentTask?.logStream) {
+        currentTask.logStream.end();
+      }
+      this.updateTask(id, { status: code === 0 ? "작업완료" : "작업실패", process: undefined, logStream: undefined });
     });
 
     child.on("error", () => {
-      this.updateTask(id, { status: "작업실패", process: undefined });
+      const currentTask = this.tasks.get(id);
+      if (currentTask?.logStream) {
+        currentTask.logStream.end();
+      }
+      this.updateTask(id, { status: "작업실패", process: undefined, logStream: undefined });
     });
   }
 
