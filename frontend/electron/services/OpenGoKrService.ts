@@ -81,6 +81,13 @@ class OpenGoKrService {
     const task = this.tasks.get(id);
     if (!task) throw new Error("id에 해당하는 태스크가 존재하지 않습니다");
 
+    // 기존에 예약되어 있던 작업이 있다면 취소
+    const timer = this.scheduledTasks.get(id);
+    if (timer) {
+      clearTimeout(timer);
+      this.scheduledTasks.delete(id);
+    }
+
     this.executeTask(id);
     return id;
   }
@@ -100,6 +107,7 @@ class OpenGoKrService {
     }, delay);
 
     this.scheduledTasks.set(id, timer);
+    this.updateTask(id, { status: "예약완료" });
 
     return id;
   }
