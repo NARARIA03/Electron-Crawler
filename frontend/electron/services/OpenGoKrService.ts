@@ -133,6 +133,7 @@ class OpenGoKrService {
 
     child.stdout.on("data", (chunk: Buffer) => {
       const text = chunk.toString("utf-8");
+      console.log(`[TASKID: ${id}]: ${text}`);
 
       const successDir = text.match(/DIRECTORY:(.+)/);
       const failedDir = text.match(/FAILDIRECTORY:(.+)/);
