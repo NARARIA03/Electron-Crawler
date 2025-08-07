@@ -3,7 +3,6 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { downloadDirIpc, downloadQueryExcel, openFinderIpc, preventPowerSave } from "./ipcs";
 import { openGoKrIpc } from "./ipcs/openGoKrIpc";
-import OpenGoKrService from "./services/OpenGoKrService";
 
 // const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
