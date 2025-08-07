@@ -17,19 +17,69 @@ def crawlOpenGoKr(
     downloadDir: str,
     excelName: str,
     debug: str,
+    configs: list,
+) -> None:
+    browser = None
+    try:
+        browser = Selenium(
+            "https://www.open.go.kr/com/main/mainView.do", downloadDir, debug
+        )
+
+        for config in configs:
+            try:
+                query = config.get("query", "")
+                organization = config.get("organization", "")
+                location = config.get("location", "")
+                startDate = config.get("startDate", "")
+                endDate = config.get("endDate", "")
+                include = config.get("include")
+                exclude = config.get("exclude")
+
+                excel = ExcelHelper(downloadDir, excelName)
+
+                crawlSingleConfig(
+                    browser,
+                    excel,
+                    query,
+                    organization,
+                    location,
+                    startDate,
+                    endDate,
+                    include,
+                    exclude,
+                    downloadDir,
+                )
+
+            except Exception as config_error:
+                utils.printWithLogging(
+                    f"Config 처리 중 에러 발생 ({organization}): {config_error}"
+                )
+                continue
+
+    except Exception as e:
+        utils.printWithLogging(f"전체 크롤링 에러: {e}")
+        utils.printWithLogging(traceback.format_exc())
+        utils.printWithLogging(f"FAILDIRECTORY:{downloadDir}/logs")
+        raise RuntimeError("크롤링 도중 오류 발생")
+    finally:
+        if browser:
+            browser.close()
+
+
+def crawlSingleConfig(
+    browser: Selenium,
+    excel: ExcelHelper,
     query: str,
     organization: str,
     location: str,
     startDate: str,
     endDate: str,
-    include: Optional[str] = None,
-    exclude: Optional[str] = None,
+    include: Optional[str],
+    exclude: Optional[str],
+    downloadDir: str,
 ) -> None:
     try:
-        browser = Selenium(
-            "https://www.open.go.kr/com/main/mainView.do", downloadDir, debug
-        )
-        excel = ExcelHelper(downloadDir, excelName)
+        browser.driver.get("https://www.open.go.kr/com/main/mainView.do")
         # 검색어 입력
         browser.typingInputElement("xpath", '//*[@id="m_input"]', query)
         # 검색 버튼 클릭
@@ -188,14 +238,15 @@ def crawlOpenGoKr(
             except TimeoutException:
                 utils.printWithLogging("페이지 전환 없음, 순회 종료")
                 break
-        browser.close()
         excel.pretterColumns()
         excel.save()
         time.sleep(TIME)
 
     except Exception as e:
-        utils.printWithLogging(f"에러 발생: {e}")
+        utils.printWithLogging(f"단일 Config 크롤링 에러 ({organization}): {e}")
         utils.printWithLogging(traceback.format_exc())
-        utils.saveLog(f"{downloadDir}/logs")
-        utils.printWithLogging(f"FAILDIRECTORY:{downloadDir}/logs")
-        raise RuntimeError("크롤링 도중 오류 발생")
+        if excel:
+            excel.notFoundData(query, organization, f"크롤링 중 에러 발생: {str(e)}")
+            excel.pretterColumns()
+            excel.save()
+        raise e
