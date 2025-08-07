@@ -46,8 +46,9 @@ const ListItem = ({ task }: Props) => {
     if (!file) return;
 
     try {
+      const parsedExcelName = file.name.replace(/^query/, "");
       const parsedQuery = await parseExcelQuery(file);
-      await setTaskQueryIPC(id, file.name, parsedQuery);
+      await setTaskQueryIPC(id, parsedExcelName, parsedQuery);
       toast.success("검색 엑셀 로드 성공.");
       console.log(parsedQuery);
     } catch (error) {
