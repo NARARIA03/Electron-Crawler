@@ -115,7 +115,7 @@ def crawlSingleConfig(
             )
         except TimeoutException:
             print(
-                f"기관+지역에 매칭되는 요소 없음. 정상 종료. {location}-{organization}",
+                f"기관+지역에 매칭되는 요소 없음. 다음 config로 진행. {location}-{organization}",
                 flush=True,
             )
             excel.notFoundData(
@@ -123,7 +123,6 @@ def crawlSingleConfig(
             )
             excel.pretterColumns()
             excel.save()
-            browser.close()
             return
         # 확인 버튼 클릭 (새 창 자동으로 닫힘)
         browser.clickElement("xpath", '//*[@id="popup_wrap"]/div[2]/div[2]/div[5]/a[1]')
@@ -159,7 +158,6 @@ def crawlSingleConfig(
             excel.notFoundData(query, organization, "검색 결과가 0건입니다.")
             excel.pretterColumns()
             excel.save()
-            browser.close()
             return
         browser.clickElement("xpath", '//*[@id="infoList"]')
         curPageIdx = 1
