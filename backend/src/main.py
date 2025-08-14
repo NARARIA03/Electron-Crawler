@@ -36,7 +36,8 @@ def main():
     excelName = args.excelName
     downloadDir = os.path.join(args.baseDir, DIR_NAME, excelName.split(".")[0])
 
-    crawlOpenGoKr(downloadDir, excelName, debug, configs)
+    for cfg in configs:
+        crawlOpenGoKr(downloadDir, excelName, debug, **cfg)
     print(f"DIRECTORY:{downloadDir}", flush=True)
 
 
