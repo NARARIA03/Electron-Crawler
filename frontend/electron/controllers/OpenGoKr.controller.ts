@@ -16,7 +16,7 @@ export type Task = {
   debug: string | null;
 };
 
-class OpenGoKrService {
+class OpenGoKrController {
   private static dirName = path.dirname(fileURLToPath(import.meta.url));
   private static tasks = new Map<string, Task>();
   private static scheduledTasks = new Map<string, NodeJS.Timeout>();
@@ -236,4 +236,4 @@ class OpenGoKrService {
   }
 }
 
-export default OpenGoKrService;
+export default OpenGoKrController;
