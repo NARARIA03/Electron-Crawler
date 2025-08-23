@@ -136,6 +136,14 @@ class NaraG2bService {
     await page.waitForSelector("#___processbar2_i", { hidden: true });
     this.loggingService.logging("로딩 프로세스바 사라짐 확인");
 
+    await page.waitForSelector("span#mf_wfm_container_tbxTotCnt");
+    const totalCnt = await page.$eval("span#mf_wfm_container_tbxTotCnt", (span) => Number(span.innerText));
+
+    if (totalCnt === 0) {
+      // Todo: 엑셀에 "검색 결과 없음" 값을 기록하는 로직 추가
+      throw new Error("검색 결과가 0건입니다.");
+    }
+
     await this.delay(10000);
   }
 }

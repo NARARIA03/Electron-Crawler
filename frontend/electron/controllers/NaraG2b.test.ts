@@ -18,8 +18,8 @@ test("NaraG2B 예약 테스트", () => {
     id,
     data: [
       {
-        query: "신발장",
-        startDate: "2024-11-23",
+        query: "급식",
+        startDate: "2024-05-23",
         endDate: "2025-05-22",
         organization: "개운중학교",
         location: "서울특별시교육청",
@@ -44,8 +44,8 @@ test("NaraG2B 즉시 실행 테스트", async () => {
     id,
     data: [
       {
-        query: "신발장",
-        startDate: "2024-11-23",
+        query: "급식",
+        startDate: "2024-05-23",
         endDate: "2025-05-22",
         organization: "개운중학교",
         location: "서울특별시교육청",
