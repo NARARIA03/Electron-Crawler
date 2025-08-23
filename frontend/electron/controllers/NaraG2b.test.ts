@@ -44,10 +44,10 @@ test("NaraG2B 즉시 실행 테스트", async () => {
     id,
     data: [
       {
-        query: "급식",
-        startDate: "2024-05-23",
-        endDate: "2025-05-22",
-        organization: "개운중학교",
+        query: "소모",
+        startDate: "2024-08-25",
+        endDate: "2025-08-24",
+        organization: "경기기계공업고등학교",
         location: "서울특별시교육청",
       },
     ],
