@@ -88,8 +88,8 @@ class NaraG2bService {
     const page = await this.browser.newPage();
     await page.goto("https://www.g2b.go.kr/");
     await page.setViewport({ width: 1080, height: 1024 });
-    await page.locator("body.has-main").wait();
 
+    await page.waitForSelector('button[aria-label="창닫기"]', { visible: true });
     await page.$$eval('button[aria-label="창닫기"]', (buttons) => buttons.map((button) => button.click()));
     this.loggingService.logging("공지 모달 모두 닫기 성공");
 
