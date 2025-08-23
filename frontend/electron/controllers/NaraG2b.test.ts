@@ -6,7 +6,7 @@ vi.mock("electron", () => ({
     getAllWindows: vi.fn(() => []),
   },
   shell: {
-    openPath: vi.fn(() => console.log("openPath 호출")),
+    openPath: vi.fn((path: string) => console.log("openPath 호출", path)),
   },
 }));
 

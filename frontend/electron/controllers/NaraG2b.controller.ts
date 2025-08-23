@@ -1,5 +1,4 @@
 import { BrowserWindow, shell } from "electron";
-import fs from "node:fs";
 import path from "node:path";
 import NaraG2bService, { type NaraG2bCrawlData } from "../services/NaraG2b.service.js";
 
@@ -11,7 +10,6 @@ export type NaraG2bTask = {
   scheduledTime?: Date;
   status: "대기중" | "예약완료" | "작업중" | "작업완료" | "작업실패" | "취소됨";
   service?: NaraG2bService;
-  logStream?: fs.WriteStream;
   debug: boolean;
 };
 
@@ -21,7 +19,7 @@ class NaraG2bController {
 
   /** READ */
   public static getAllTasks() {
-    return [...this.tasks.values()].map(({ service: _, logStream: __, ...rest }) => rest);
+    return [...this.tasks.values()].map(({ service: _, ...rest }) => rest);
   }
 
   /** CREATE */
@@ -67,10 +65,8 @@ class NaraG2bController {
     // 실행 중 작업 -> 실행 종료, 태스크 리스트에는 유지, 취소됨 상태로 변경
     if (task.service) {
       task.service.close();
-      if (task.logStream) {
-        task.logStream.end();
-      }
-      this.updateTask(id, { status: "취소됨", service: undefined, logStream: undefined });
+
+      this.updateTask(id, { status: "취소됨", service: undefined });
       return true;
     }
 
@@ -83,7 +79,6 @@ class NaraG2bController {
   public static async runTask(id: string) {
     const task = this.tasks.get(id);
     if (!task) throw new Error("id에 해당하는 태스크가 존재하지 않습니다");
-
     // 기존에 예약되어 있던 작업이 있다면 취소
     const timer = this.scheduledTasks.get(id);
     if (timer) {
@@ -119,76 +114,35 @@ class NaraG2bController {
     const task = this.tasks.get(id);
     if (!task) return;
 
-    this.updateTask(id, { status: "작업중" });
-
     if (!task.baseDir) throw new Error("기본 저장 경로가 설정되지 않았습니다");
     if (!task.excelName || !task.data) throw new Error("엑셀을 정상적으로 인식하지 못했습니다");
 
-    // 로그 파일 경로 생성
-    const defaultDirName = "excel_database";
-    const excelBaseName = task.excelName.split(".")[0];
-    const logDir = path.join(task.baseDir, defaultDirName, excelBaseName);
-    const today = new Date();
-    const dateString = `${today.getFullYear()}_${String(today.getMonth() + 1).padStart(2, "0")}_${String(
-      today.getDate()
-    ).padStart(2, "0")}`;
-    const logFileName = `${dateString}_logs.txt`;
-    const logFilePath = path.join(logDir, logFileName);
-
-    // 로그 디렉토리 생성
     try {
-      if (!fs.existsSync(logDir)) {
-        fs.mkdirSync(logDir, { recursive: true });
-      }
-      const logStream = fs.createWriteStream(logFilePath, { flags: "a" });
-      this.updateTask(id, { logStream });
-    } catch (error) {
-      console.error(`로그 파일 생성 실패: ${error}`);
-    }
+      this.updateTask(id, { status: "작업중" });
 
-    try {
-      const service = new NaraG2bService();
+      const service = new NaraG2bService({
+        data: task.data,
+        excelName: task.excelName,
+        baseDir: task.baseDir,
+        debug: task.debug,
+      });
       this.updateTask(id, { service });
 
-      const results = await service.crawl(task.data, task.baseDir, task.excelName, Boolean(task.debug));
+      console.log(this.tasks.get(id));
+
+      await service.crawl();
+      this.updateTask(id, { status: "작업완료", service: undefined });
 
       // 작업 완료 후 디렉토리 열기
-      const outputDir = path.join(task.baseDir, path.dirname(task.excelName));
+      const outputDir = path.join(task.baseDir, "excel_database", task.excelName.split(".")[0]);
       shell.openPath(outputDir);
-
-      this.updateTask(id, {
-        status: "작업완료",
-        service: undefined,
-        logStream: undefined,
-      });
-
-      // 로그 스트림 종료
-      const currentTask = this.tasks.get(id);
-      if (currentTask?.logStream) {
-        currentTask.logStream.end();
-      }
-
-      await service.close();
     } catch (error) {
       console.error(`NaraG2B 크롤링 오류: ${error}`);
-
-      this.updateTask(id, {
-        status: "작업실패",
-        service: undefined,
-        logStream: undefined,
-      });
-
-      // 로그 스트림 종료
-      const currentTask = this.tasks.get(id);
-      if (currentTask?.logStream) {
-        currentTask.logStream.end();
-      }
+      this.updateTask(id, { status: "작업실패", service: undefined });
 
       // 실패한 경우에도 작업 디렉토리 열기
-      if (task.baseDir) {
-        const failDir = path.join(task.baseDir, "excel_database", task.excelName.split(".")[0]);
-        shell.openPath(failDir);
-      }
+      const failDir = path.join(task.baseDir, "excel_database", task.excelName.split(".")[0]);
+      shell.openPath(failDir);
     }
   }
 
@@ -197,25 +151,6 @@ class NaraG2bController {
     allWindows.forEach((window) => {
       window.webContents.send("naraG2b:notifyUpdate", this.getAllTasks());
     });
-  }
-
-  /** DEBUG */
-  public static getDebugInfo() {
-    return {
-      tasks: Array.from(this.tasks.entries()).map(([id, task]) => ({
-        id,
-        status: task.status,
-        excelName: task.excelName,
-        dataLength: task.data?.length ?? 0,
-        hasService: !!task.service,
-        scheduledTime: task.scheduledTime?.toISOString(),
-        baseDir: task.baseDir,
-        debug: task.debug,
-      })),
-      scheduledTasks: Array.from(this.scheduledTasks.keys()),
-      totalTasks: this.tasks.size,
-      totalScheduled: this.scheduledTasks.size,
-    };
   }
 }
 
