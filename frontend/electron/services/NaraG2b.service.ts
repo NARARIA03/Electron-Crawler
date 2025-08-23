@@ -1,5 +1,8 @@
-import puppeteer, { Browser } from "puppeteer";
+import puppeteer, { Browser, Page } from "puppeteer";
 import LoggingService from "./Logging.service";
+import PDFDocument from "pdfkit";
+import fs from "fs";
+import path from "path";
 
 export type NaraG2bCrawlData = {
   query: string; // 검색어 - 신발장
@@ -64,6 +67,85 @@ class NaraG2bService {
 
   private async delay(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private async captureModalToPDF(page: Page, itemIndex: number, pageIndex: number): Promise<void> {
+    if (!this.loggingService) throw new Error("로깅 서비스가 초기화되지 않았습니다");
+
+    try {
+      await page.waitForSelector("#FIUA027_01_wframe", { visible: true, timeout: 10000 });
+
+      const scrollContainer = await page.$("#FIUA027_01_wframe_popupCnts_searchFormLeft");
+      if (!scrollContainer) {
+        throw new Error("모달 스크롤 컨테이너를 찾을 수 없습니다");
+      }
+
+      const { scrollHeight, clientHeight } = await page.evaluate((element) => {
+        return {
+          scrollHeight: element.scrollHeight,
+          clientHeight: element.clientHeight,
+        };
+      }, scrollContainer);
+
+      this.loggingService.logging(`모달 높이 정보 - 전체: ${scrollHeight}px, 보이는 영역: ${clientHeight}px`);
+
+      const screenshots: Buffer[] = [];
+      const step = Math.max(clientHeight - 100, 200);
+
+      for (let y = 0; y < scrollHeight; y += step) {
+        await page.evaluate(
+          (element, scrollTop) => {
+            element.scrollTop = Math.min(scrollTop, element.scrollHeight - element.clientHeight);
+          },
+          scrollContainer,
+          y
+        );
+
+        await this.delay(500);
+
+        const screenshot = (await scrollContainer.screenshot({
+          type: "png",
+        })) as Buffer;
+        screenshots.push(screenshot);
+      }
+
+      this.loggingService.logging(`총 ${screenshots.length}개의 스크린샷 캡쳐 완료`);
+
+      const pdfDir = path.join(this.baseDir, "pdfs");
+      if (!fs.existsSync(pdfDir)) {
+        fs.mkdirSync(pdfDir, { recursive: true });
+      }
+
+      const pdfPath = path.join(pdfDir, `modal_page${pageIndex}_item${itemIndex}.pdf`);
+      const doc = new PDFDocument({ size: "A4", margin: 50 });
+      const stream = fs.createWriteStream(pdfPath);
+      doc.pipe(stream);
+
+      screenshots.forEach((screenshot, index) => {
+        if (index > 0) doc.addPage();
+
+        try {
+          doc.image(screenshot, 50, 50, {
+            width: 500,
+            align: "center",
+          });
+        } catch (error) {
+          this.loggingService?.logging(`이미지 추가 오류 (${index}번째): ${error}`);
+        }
+      });
+
+      doc.end();
+
+      await new Promise<void>((resolve, reject) => {
+        stream.on("finish", () => resolve());
+        stream.on("error", reject);
+      });
+
+      this.loggingService.logging(`PDF 저장 완료: ${pdfPath}`);
+    } catch (error) {
+      this.loggingService.logging(`PDF 캡쳐 중 오류: ${error}`);
+      throw error;
+    }
   }
 
   public async crawl() {
@@ -163,10 +245,12 @@ class NaraG2bService {
           this.loggingService.logging(`${i}페이지 ${j + 1}번째 결과 클릭 성공`);
           await this.delay(1000);
 
+          await this.captureModalToPDF(page, j + 1, i);
+          this.loggingService.logging(`${i}페이지 ${j + 1}번째 PDF 캡쳐 성공`);
+
           await page.locator('button[aria-label="창닫기"]').click();
           this.loggingService.logging(`${i}페이지 ${j + 1}번째 창 닫기 성공`);
         } catch (error) {
-          // Todo: 엑셀에 누락된 데이터가 존재한다는 경고 포함시키기
           this.loggingService.logging(`${i}페이지${j + 1}번째 결과 처리 중 오류: ${error}`);
         }
       }
