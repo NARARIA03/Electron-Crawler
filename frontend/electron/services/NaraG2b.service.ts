@@ -92,59 +92,27 @@ class NaraG2bService {
     await page.setViewport({ width: 1080, height: 1024 });
     await page.locator("body.has-main").wait();
 
-    await page.evaluate(() => {
-      const 모달닫기버튼들 = document.querySelectorAll('button[aria-label="창닫기"]');
-      모달닫기버튼들.forEach((button) => (button as HTMLButtonElement).click());
-    });
-    this.loggingService.logging("공지 모달 닫기 성공");
+    await page.$$eval('button[aria-label="창닫기"]', (buttons) => buttons.map((button) => button.click()));
+    this.loggingService.logging("공지 모달 모두 닫기 성공");
 
-    await page.evaluate(() => {
-      const 검색ON버튼 = document.querySelector('span[aria-label="Go to slide 2"]') as HTMLElement | null;
-      if (!검색ON버튼) throw new Error("검색ON 버튼 클릭 실패");
-      검색ON버튼.click();
-    });
+    await page.locator('span[aria-label="Go to slide 2"]').click();
     this.loggingService.logging("검색ON 버튼 클릭 성공");
 
-    await page.evaluate(() => {
-      const 통합상세버튼 = document.querySelector('input[title="통합상세"]') as HTMLElement | null;
-      if (!통합상세버튼) throw new Error("통합 상세 버튼 클릭 실패");
-      통합상세버튼.click();
-    });
+    await page.locator('input[title="통합상세"]').click();
     this.loggingService.logging("통합 상세 버튼 클릭 성공");
 
-    await page.evaluate((text) => {
-      const 검색어인풋 = document.querySelector('input[title="검색어 입력"]') as HTMLInputElement | null;
-      if (!검색어인풋) throw new Error("검색어 인풋 입력 실패");
-      검색어인풋.value = text;
-      검색어인풋.dispatchEvent(new Event("input", { bubbles: true }));
-    }, query);
+    await page.locator('input[title="검색어 입력"]').fill(query);
     this.loggingService.logging("검색어 query 입력 성공");
 
-    await page.evaluate((text) => {
-      const 시작날짜인풋 = document.querySelector(
-        'input[title="(      ) 년월일 시작 날짜를 선택하세요."]'
-      ) as HTMLInputElement | null;
-      if (!시작날짜인풋) throw new Error("시작 날짜 인풋 입력 실패");
-      시작날짜인풋.value = text;
-      시작날짜인풋.dispatchEvent(new Event("input", { bubbles: true }));
-    }, startDate.split("-").join(""));
+    const parsedStartDate = startDate.split("-").join("");
+    const parsedEndDate = endDate.split("-").join("");
+
+    await page.locator('input[title="(      ) 년월일 시작 날짜를 선택하세요."]').fill(parsedStartDate);
     this.loggingService.logging("시작 날짜 인풋 입력 성공");
 
-    await page.evaluate((text) => {
-      const 종료날짜인풋 = document.querySelector(
-        'input[title="(      ) 년월일 종료 날짜를 선택하세요."]'
-      ) as HTMLInputElement | null;
-      if (!종료날짜인풋) throw new Error("종료 날짜 인풋 입력 실패");
-      종료날짜인풋.value = text;
-      종료날짜인풋.dispatchEvent(new Event("input", { bubbles: true }));
-    }, endDate.split("-").join(""));
+    await page.locator('input[title="(      ) 년월일 종료 날짜를 선택하세요."]').fill(parsedEndDate);
     this.loggingService.logging("종료 날짜 인풋 입력 성공");
 
-    // await page.evaluate(() => {
-    //   const 검색버튼 = document.querySelector("a.main-srch") as HTMLElement | null;
-    //   if (!검색버튼) throw new Error("검색 버튼 클릭 실패");
-    //   검색버튼.click();
-    // });
     await page.locator("a.main-srch").click();
     this.loggingService.logging("검색 버튼 클릭 성공");
 
