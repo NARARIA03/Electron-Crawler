@@ -3,16 +3,11 @@ import path from "node:path";
 
 class LoggingService {
   private logger: fs.WriteStream | null = null;
-  private readonly baseDir: string;
   private readonly defaultDirName = "excel_database";
 
-  constructor(baseDir: string) {
-    this.baseDir = baseDir;
-  }
-
-  public createLoggingStream(excelName: string) {
+  constructor(baseDir: string, excelName: string) {
     const excelBaseName = excelName.split(".")[0];
-    const logDir = path.join(this.baseDir, this.defaultDirName, excelBaseName);
+    const logDir = path.join(baseDir, this.defaultDirName, excelBaseName);
 
     const today = new Date();
     const dateString = `${today.getFullYear()}_${String(today.getMonth() + 1).padStart(2, "0")}_${String(
@@ -22,7 +17,6 @@ class LoggingService {
     const logFileName = `${dateString}_logs.txt`;
     const logFilePath = path.join(logDir, logFileName);
 
-    // 로그 디렉토리 생성
     try {
       if (!fs.existsSync(logDir)) {
         fs.mkdirSync(logDir, { recursive: true });
@@ -47,6 +41,15 @@ class LoggingService {
     if (this.logger) {
       this.logger.write(`${logMessage}\n`);
     }
+  }
+
+  public errorLogging(message: string, error: unknown) {
+    const errorDetails =
+      error instanceof Error
+        ? JSON.stringify(error, Object.getOwnPropertyNames(error), 2)
+        : JSON.stringify(error, null, 2);
+
+    this.logging(`${message}\n${errorDetails}`);
   }
 
   public save() {
