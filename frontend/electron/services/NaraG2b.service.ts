@@ -1,5 +1,7 @@
 import puppeteer, { Browser } from "puppeteer";
 import LoggingService from "./Logging.service";
+import fs from "fs";
+import path from "path";
 
 export type NaraG2bCrawlData = {
   query: string; // 검색어 - 신발장
@@ -72,7 +74,6 @@ class NaraG2bService {
         await this.setUp();
         await this.query(crawlData);
       } catch (error) {
-        console.error(error);
         this.loggingService?.logging(error as string);
       } finally {
         await this.close();
@@ -151,22 +152,54 @@ class NaraG2bService {
     this.loggingService.logging(`총 페이지 수: ${pageCount}개`);
 
     for (let i = 1; i <= pageCount; i++) {
-      await this.delay(1000);
+      await page.waitForNetworkIdle({ idleTime: 1000 });
       const resultsCount = await page.$$eval(".w2textbox.link_txt", (elements) => elements.length);
       this.loggingService.logging(`현재 페이지 검색 결과 수: ${resultsCount}개`);
       for (let j = 0; j < resultsCount; j++) {
         try {
-          await this.delay(1000);
+          await page.waitForNetworkIdle({ idleTime: 1000 });
           await page.waitForSelector(`#mf_wfm_container_grdTotalSrch_${j}_bizNm`, { visible: true });
           await page.$eval(`label#mf_wfm_container_grdTotalSrch_${j}_bizNm`, (label) => label.click());
-
           this.loggingService.logging(`${i}페이지 ${j + 1}번째 결과 클릭 성공`);
-          await this.delay(1000);
 
-          await page.locator('button[aria-label="창닫기"]').click();
+          await page.waitForNetworkIdle({ idleTime: 1000 });
+          this.loggingService.logging("Network idle + 1000ms 대기 완료");
+
+          await page.locator("#FIUA027_01_wframe_popupCnts_btnPrint").click();
+          this.loggingService.logging("출력 버튼 클릭 완료");
+
+          await page.waitForNetworkIdle({ idleTime: 1000 });
+          this.loggingService.logging("Network idle + 1000ms 대기 완료");
+
+          const pdfSrc = await page.evaluate(() => {
+            const embeds = document.querySelectorAll("embed");
+            for (const embed of embeds) {
+              if (embed.src) {
+                return embed.src;
+              }
+            }
+            return null;
+          });
+
+          const base64Data = pdfSrc?.split(",")[1];
+          if (base64Data) {
+            const pdfBuffer = Buffer.from(base64Data, "base64");
+            const filePath = path.join(
+              this.baseDir,
+              "excel_database",
+              this.excelName.split(".")[0],
+              "files",
+              `${i}-${j}-generated.pdf`
+            );
+            fs.writeFileSync(filePath, pdfBuffer);
+            this.loggingService.logging("PDF 파일 다운 성공");
+          } else {
+            this.loggingService.logging("PDF 파일 다운 실패");
+          }
+
+          await page.$$eval('button[aria-label="창닫기"]', (buttons) => buttons.map((button) => button.click()));
           this.loggingService.logging(`${i}페이지 ${j + 1}번째 창 닫기 성공`);
         } catch (error) {
-          // Todo: 엑셀에 누락된 데이터가 존재한다는 경고 포함시키기
           this.loggingService.logging(`${i}페이지${j + 1}번째 결과 처리 중 오류: ${error}`);
         }
       }
