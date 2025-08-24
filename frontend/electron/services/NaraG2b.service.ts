@@ -50,9 +50,7 @@ class NaraG2bService {
       ],
     });
 
-    this.loggingService = new LoggingService(this.baseDir);
-    this.loggingService.createLoggingStream(this.excelName);
-
+    this.loggingService = new LoggingService(this.baseDir, this.excelName);
     this.xlsxService = new XlsxService(this.baseDir, this.excelName);
     this.loggingService.logging(`엑셀 파일 생성 완료: ${this.xlsxService.getFilePath()}`);
   }
