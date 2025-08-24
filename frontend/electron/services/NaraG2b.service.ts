@@ -128,7 +128,7 @@ class NaraG2bService {
       await page.locator(`::-p-xpath(//nobr/a[contains(text(), '${location}')])`).click();
       this.loggingService.logging("수요기관 선택 완료");
     } catch (error) {
-      // Todo: 엑셀에 "수요기관 존재하지 않음" 값을 기록하는 로직 추가
+      this.xlsxService.addRow().error({ query, organization, title: "", message: "수요기관 존재하지 않음" });
       throw new Error(`수요기관 "${location}"이 존재하지 않습니다`);
     }
 
@@ -154,7 +154,7 @@ class NaraG2bService {
     this.loggingService.logging(`검색 결과: ${totalCnt}개`);
 
     if (totalCnt === 0) {
-      // Todo: 엑셀에 "검색 결과 없음" 값을 기록하는 로직 추가
+      this.xlsxService.addRow().error({ query, organization, title: "", message: "검색 결과 없음" });
       throw new Error("검색 결과가 0건입니다.");
     }
 
