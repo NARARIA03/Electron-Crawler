@@ -188,6 +188,7 @@ class NaraG2bService {
               this.baseDir,
               "excel_database",
               this.excelName.split(".")[0],
+              "files",
               `${i}-${j}-generated.pdf`
             );
             fs.writeFileSync(filePath, pdfBuffer);
