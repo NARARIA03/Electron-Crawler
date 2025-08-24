@@ -1,6 +1,5 @@
-import puppeteer, { Browser, Page } from "puppeteer";
+import puppeteer, { Browser } from "puppeteer";
 import LoggingService from "./Logging.service";
-import PDFDocument from "pdfkit";
 import fs from "fs";
 import path from "path";
 
@@ -69,92 +68,12 @@ class NaraG2bService {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  private async captureModalToPDF(page: Page, itemIndex: number, pageIndex: number): Promise<void> {
-    if (!this.loggingService) throw new Error("로깅 서비스가 초기화되지 않았습니다");
-
-    try {
-      await page.waitForSelector("#FIUA027_01_wframe", { visible: true, timeout: 10000 });
-
-      const scrollContainer = await page.$("#FIUA027_01_wframe_popupCnts_searchFormLeft");
-      if (!scrollContainer) {
-        throw new Error("모달 스크롤 컨테이너를 찾을 수 없습니다");
-      }
-
-      const { scrollHeight, clientHeight } = await page.evaluate((element) => {
-        return {
-          scrollHeight: element.scrollHeight,
-          clientHeight: element.clientHeight,
-        };
-      }, scrollContainer);
-
-      this.loggingService.logging(`모달 높이 정보 - 전체: ${scrollHeight}px, 보이는 영역: ${clientHeight}px`);
-
-      const screenshots: Buffer[] = [];
-      const step = Math.max(clientHeight - 100, 200);
-
-      for (let y = 0; y < scrollHeight; y += step) {
-        await page.evaluate(
-          (element, scrollTop) => {
-            element.scrollTop = Math.min(scrollTop, element.scrollHeight - element.clientHeight);
-          },
-          scrollContainer,
-          y
-        );
-
-        await this.delay(500);
-
-        const screenshot = (await scrollContainer.screenshot({
-          type: "png",
-        })) as Buffer;
-        screenshots.push(screenshot);
-      }
-
-      this.loggingService.logging(`총 ${screenshots.length}개의 스크린샷 캡쳐 완료`);
-
-      const pdfDir = path.join(this.baseDir, "pdfs");
-      if (!fs.existsSync(pdfDir)) {
-        fs.mkdirSync(pdfDir, { recursive: true });
-      }
-
-      const pdfPath = path.join(pdfDir, `modal_page${pageIndex}_item${itemIndex}.pdf`);
-      const doc = new PDFDocument({ size: "A4", margin: 50 });
-      const stream = fs.createWriteStream(pdfPath);
-      doc.pipe(stream);
-
-      screenshots.forEach((screenshot, index) => {
-        if (index > 0) doc.addPage();
-
-        try {
-          doc.image(screenshot, 50, 50, {
-            width: 500,
-            align: "center",
-          });
-        } catch (error) {
-          this.loggingService?.logging(`이미지 추가 오류 (${index}번째): ${error}`);
-        }
-      });
-
-      doc.end();
-
-      await new Promise<void>((resolve, reject) => {
-        stream.on("finish", () => resolve());
-        stream.on("error", reject);
-      });
-
-      this.loggingService.logging(`PDF 저장 완료: ${pdfPath}`);
-    } catch (error) {
-      this.loggingService.logging(`PDF 캡쳐 중 오류: ${error}`);
-      throw error;
-    }
-  }
-
   public async crawl() {
     for (const crawlData of this.data) {
       try {
         await this.setUp();
         await this.query(crawlData);
       } catch (error) {
-        console.error(error);
         this.loggingService?.logging(error as string);
       } finally {
         await this.close();
@@ -233,22 +152,51 @@ class NaraG2bService {
     this.loggingService.logging(`총 페이지 수: ${pageCount}개`);
 
     for (let i = 1; i <= pageCount; i++) {
-      await this.delay(1000);
+      await page.waitForNetworkIdle({ idleTime: 1000 });
       const resultsCount = await page.$$eval(".w2textbox.link_txt", (elements) => elements.length);
       this.loggingService.logging(`현재 페이지 검색 결과 수: ${resultsCount}개`);
       for (let j = 0; j < resultsCount; j++) {
         try {
-          await this.delay(1000);
+          await page.waitForNetworkIdle({ idleTime: 1000 });
           await page.waitForSelector(`#mf_wfm_container_grdTotalSrch_${j}_bizNm`, { visible: true });
           await page.$eval(`label#mf_wfm_container_grdTotalSrch_${j}_bizNm`, (label) => label.click());
-
           this.loggingService.logging(`${i}페이지 ${j + 1}번째 결과 클릭 성공`);
-          await this.delay(1000);
 
-          await this.captureModalToPDF(page, j + 1, i);
-          this.loggingService.logging(`${i}페이지 ${j + 1}번째 PDF 캡쳐 성공`);
+          await page.waitForNetworkIdle({ idleTime: 1000 });
+          this.loggingService.logging("Network idle + 1000ms 대기 완료");
 
-          await page.locator('button[aria-label="창닫기"]').click();
+          await page.locator("#FIUA027_01_wframe_popupCnts_btnPrint").click();
+          this.loggingService.logging("출력 버튼 클릭 완료");
+
+          await page.waitForNetworkIdle({ idleTime: 1000 });
+          this.loggingService.logging("Network idle + 1000ms 대기 완료");
+
+          const pdfSrc = await page.evaluate(() => {
+            const embeds = document.querySelectorAll("embed");
+            for (const embed of embeds) {
+              if (embed.src) {
+                return embed.src;
+              }
+            }
+            return null;
+          });
+
+          const base64Data = pdfSrc?.split(",")[1];
+          if (base64Data) {
+            const pdfBuffer = Buffer.from(base64Data, "base64");
+            const filePath = path.join(
+              this.baseDir,
+              "excel_database",
+              this.excelName.split(".")[0],
+              `${i}-${j}-generated.pdf`
+            );
+            fs.writeFileSync(filePath, pdfBuffer);
+            this.loggingService.logging("PDF 파일 다운 성공");
+          } else {
+            this.loggingService.logging("PDF 파일 다운 실패");
+          }
+
+          await page.$$eval('button[aria-label="창닫기"]', (buttons) => buttons.map((button) => button.click()));
           this.loggingService.logging(`${i}페이지 ${j + 1}번째 창 닫기 성공`);
         } catch (error) {
           this.loggingService.logging(`${i}페이지${j + 1}번째 결과 처리 중 오류: ${error}`);
