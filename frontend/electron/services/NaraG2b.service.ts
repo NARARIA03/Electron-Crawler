@@ -88,8 +88,8 @@ class NaraG2bService {
     const page = await this.browser.newPage();
     await page.goto("https://www.g2b.go.kr/");
     await page.setViewport({ width: 1080, height: 1024 });
-    await page.locator("body.has-main").wait();
 
+    await page.waitForSelector('button[aria-label="창닫기"]', { visible: true });
     await page.$$eval('button[aria-label="창닫기"]', (buttons) => buttons.map((button) => button.click()));
     this.loggingService.logging("공지 모달 모두 닫기 성공");
 
@@ -133,10 +133,53 @@ class NaraG2bService {
     await page.locator("a.main-srch").click();
     this.loggingService.logging("검색 버튼 클릭 성공");
 
-    await page.waitForSelector("#___processbar2_i", { hidden: true });
-    this.loggingService.logging("로딩 프로세스바 사라짐 확인");
+    await page.waitForResponse((response) => response.url().includes("srchTotal.do") && response.status() === 200);
+    this.loggingService.logging("srchTotal.do API 200 성공");
 
-    await this.delay(10000);
+    await this.delay(1000);
+
+    await page.waitForSelector("span#mf_wfm_container_tbxTotCnt");
+    const totalCnt = await page.$eval("span#mf_wfm_container_tbxTotCnt", (span) => Number(span.innerText));
+    this.loggingService.logging(`검색 결과: ${totalCnt}개`);
+
+    if (totalCnt === 0) {
+      // Todo: 엑셀에 "검색 결과 없음" 값을 기록하는 로직 추가
+      throw new Error("검색 결과가 0건입니다.");
+    }
+
+    const pageCount = Math.ceil(totalCnt / 10);
+    this.loggingService.logging(`총 페이지 수: ${pageCount}개`);
+
+    for (let i = 1; i <= pageCount; i++) {
+      await this.delay(1000);
+      const resultsCount = await page.$$eval(".w2textbox.link_txt", (elements) => elements.length);
+      this.loggingService.logging(`현재 페이지 검색 결과 수: ${resultsCount}개`);
+      for (let j = 0; j < resultsCount; j++) {
+        try {
+          await this.delay(1000);
+          await page.waitForSelector(`#mf_wfm_container_grdTotalSrch_${j}_bizNm`, { visible: true });
+          await page.$eval(`label#mf_wfm_container_grdTotalSrch_${j}_bizNm`, (label) => label.click());
+
+          this.loggingService.logging(`${i}페이지 ${j + 1}번째 결과 클릭 성공`);
+          await this.delay(1000);
+
+          await page.locator('button[aria-label="창닫기"]').click();
+          this.loggingService.logging(`${i}페이지 ${j + 1}번째 창 닫기 성공`);
+        } catch (error) {
+          // Todo: 엑셀에 누락된 데이터가 존재한다는 경고 포함시키기
+          this.loggingService.logging(`${i}페이지${j + 1}번째 결과 처리 중 오류: ${error}`);
+        }
+      }
+      if (i < pageCount) {
+        await this.delay(1000);
+        if (i % 10 === 0) {
+          await page.locator("li#mf_wfm_container_pglList_next_btn").click();
+        } else {
+          await page.locator(`a#mf_wfm_container_pglList_page_${i + 1}`).click();
+        }
+      }
+    }
+    this.loggingService.logging(`${query}-${organization}-${location}크롤링 완료`);
   }
 }
 
