@@ -23,7 +23,7 @@ class LoggingService {
       }
       this.logger = fs.createWriteStream(logFilePath, { flags: "a" });
     } catch (error) {
-      this.errorLogging("로그 파일 생성 실패", error);
+      console.error(`로그 파일 생성 실패: ${error}`);
       this.logger = null;
     }
   }
