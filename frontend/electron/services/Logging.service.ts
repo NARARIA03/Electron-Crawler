@@ -29,7 +29,7 @@ class LoggingService {
       }
       this.logger = fs.createWriteStream(logFilePath, { flags: "a" });
     } catch (error) {
-      console.error(`로그 파일 생성 실패: ${error}`);
+      this.errorLogging("로그 파일 생성 실패", error);
       this.logger = null;
     }
   }
@@ -47,6 +47,15 @@ class LoggingService {
     if (this.logger) {
       this.logger.write(`${logMessage}\n`);
     }
+  }
+
+  public errorLogging(message: string, error: unknown) {
+    const errorDetails =
+      error instanceof Error
+        ? JSON.stringify(error, Object.getOwnPropertyNames(error), 2)
+        : JSON.stringify(error, null, 2);
+
+    this.logging(`${message}\n${errorDetails}`);
   }
 
   public save() {

@@ -1,5 +1,6 @@
 import puppeteer, { Browser } from "puppeteer";
 import LoggingService from "./Logging.service";
+import XlsxService from "./Xlsx.service";
 import fs from "fs";
 import path from "path";
 
@@ -25,6 +26,7 @@ class NaraG2bService {
   private debug: Params["debug"];
 
   private browser: Browser | null = null;
+  private xlsxService: XlsxService | null = null;
   private loggingService: LoggingService | null = null;
 
   constructor({ data, excelName, baseDir, debug }: Params) {
@@ -50,6 +52,9 @@ class NaraG2bService {
 
     this.loggingService = new LoggingService(this.baseDir);
     this.loggingService.createLoggingStream(this.excelName);
+
+    this.xlsxService = new XlsxService(this.baseDir, this.excelName);
+    this.loggingService.logging(`엑셀 파일 생성 완료: ${this.xlsxService.getFilePath()}`);
   }
 
   public async close() {
@@ -60,6 +65,10 @@ class NaraG2bService {
     if (this.loggingService) {
       this.loggingService.save();
       this.loggingService = null;
+    }
+    if (this.xlsxService) {
+      this.xlsxService.save();
+      this.xlsxService = null;
     }
     await this.delay(5000);
   }
@@ -74,7 +83,7 @@ class NaraG2bService {
         await this.setUp();
         await this.query(crawlData);
       } catch (error) {
-        this.loggingService?.logging(error as string);
+        this.loggingService?.errorLogging("크롤링 중 에러 발생", error);
       } finally {
         await this.close();
       }
@@ -84,6 +93,7 @@ class NaraG2bService {
   private async query({ query, startDate, endDate, organization, location }: NaraG2bCrawlData) {
     if (!this.browser) throw new Error("브라우저 초기화 실패");
     if (!this.loggingService) throw new Error("에러 로깅 서비스 초기화 실패");
+    if (!this.xlsxService) throw new Error("xlsx 서비스 초기화 실패");
     if (!location || !organization) throw new Error("location, organization이 비어있습니다");
 
     const page = await this.browser.newPage();
@@ -158,7 +168,9 @@ class NaraG2bService {
       for (let j = 0; j < resultsCount; j++) {
         try {
           await page.waitForNetworkIdle({ idleTime: 1000 });
+
           await page.waitForSelector(`#mf_wfm_container_grdTotalSrch_${j}_bizNm`, { visible: true });
+          const title = await page.$eval(`label#mf_wfm_container_grdTotalSrch_${j}_bizNm`, (label) => label.innerText);
           await page.$eval(`label#mf_wfm_container_grdTotalSrch_${j}_bizNm`, (label) => label.click());
           this.loggingService.logging(`${i}페이지 ${j + 1}번째 결과 클릭 성공`);
 
@@ -184,23 +196,26 @@ class NaraG2bService {
           const base64Data = pdfSrc?.split(",")[1];
           if (base64Data) {
             const pdfBuffer = Buffer.from(base64Data, "base64");
-            const filePath = path.join(
-              this.baseDir,
-              "excel_database",
-              this.excelName.split(".")[0],
-              "files",
-              `${i}-${j}-generated.pdf`
-            );
+            const filesDir = path.join(this.baseDir, "excel_database", this.excelName.split(".")[0], "files");
+
+            if (!fs.existsSync(filesDir)) {
+              fs.mkdirSync(filesDir, { recursive: true });
+            }
+
+            const filePath = path.join(filesDir, `${i}-${j}-generated.pdf`);
             fs.writeFileSync(filePath, pdfBuffer);
             this.loggingService.logging("PDF 파일 다운 성공");
+            this.xlsxService.addRow().success({ query, organization, title, fileLink: filePath });
           } else {
             this.loggingService.logging("PDF 파일 다운 실패");
+            this.xlsxService.addRow().error({ query, organization, title, message: "파일 다운 실패" });
           }
+          this.loggingService.logging("엑셀에 데이터 기록 완료");
 
           await page.$$eval('button[aria-label="창닫기"]', (buttons) => buttons.map((button) => button.click()));
           this.loggingService.logging(`${i}페이지 ${j + 1}번째 창 닫기 성공`);
         } catch (error) {
-          this.loggingService.logging(`${i}페이지${j + 1}번째 결과 처리 중 오류: ${error}`);
+          this.loggingService.errorLogging(`${i}페이지${j + 1}번째 결과 처리 중 오류`, error);
         }
       }
       if (i < pageCount) {
