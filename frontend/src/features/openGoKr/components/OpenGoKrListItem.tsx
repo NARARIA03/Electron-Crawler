@@ -18,7 +18,7 @@ type Props = {
   task: Task;
 };
 
-const ListItem = ({ task }: Props) => {
+const OpenGoKrListItem = ({ task }: Props) => {
   const [time, setTime] = useState<string>("");
   const { id, data, excelName, scheduledTime, status } = task;
 
@@ -151,4 +151,4 @@ const ListItem = ({ task }: Props) => {
   );
 };
 
-export default ListItem;
+export default OpenGoKrListItem;

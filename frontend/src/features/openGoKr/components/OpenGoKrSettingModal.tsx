@@ -12,7 +12,7 @@ type Props = {
   onClose: () => void;
 };
 
-const SettingModal = ({ isOpen, onClose }: Props) => {
+const OpenGoKrSettingModal = ({ isOpen, onClose }: Props) => {
   const [downloadDir, setDownloadDir] = useState<string | null>(() => getDownloadDirectory());
   const [debug, setDebug] = useState<string | null>(() => getDebugMode());
 
@@ -88,4 +88,4 @@ const SettingModal = ({ isOpen, onClose }: Props) => {
   );
 };
 
-export default SettingModal;
+export default OpenGoKrSettingModal;

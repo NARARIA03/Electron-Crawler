@@ -1,11 +1,11 @@
 import { Button, Table } from "@/components";
 import { Plus } from "lucide-react";
-import ListItem from "./ListItem";
+import OpenGoKrListItem from "./OpenGoKrListItem";
 import { useEffect, useState } from "react";
 import type { Task } from "../types";
 import { addRowIPC, getAllTasksIPC } from "../utils/ipc";
 
-const List = () => {
+const OpenGoKrList = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
 
   // 초기 데이터 로드
@@ -55,7 +55,7 @@ const List = () => {
           </Table.Header>
           <Table.Body>
             {tasks.map((task) => (
-              <ListItem key={task.id} task={task} />
+              <OpenGoKrListItem key={task.id} task={task} />
             ))}
           </Table.Body>
         </Table>
@@ -64,4 +64,4 @@ const List = () => {
   );
 };
 
-export default List;
+export default OpenGoKrList;
