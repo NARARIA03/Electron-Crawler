@@ -1,8 +1,8 @@
 import { Input, Table } from "@/components";
-import type { Task } from "../types";
 import { Play, Send, Trash2 } from "lucide-react";
 import { useEffect, useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
+import type { NaraG2bTaskFE } from "../types";
 import { parseExcelQuery } from "../utils";
 import { getDebugMode, getDownloadDirectory } from "@/lib/localstorage";
 import {
@@ -15,10 +15,10 @@ import {
 } from "../utils/ipc";
 
 type Props = {
-  task: Task;
+  task: NaraG2bTaskFE;
 };
 
-const ListItem = ({ task }: Props) => {
+const NaraG2bListItem = ({ task }: Props) => {
   const [time, setTime] = useState<string>("");
   const { id, data, excelName, scheduledTime, status } = task;
 
@@ -52,6 +52,7 @@ const ListItem = ({ task }: Props) => {
       toast.success("검색 엑셀 로드 성공.");
       console.log(parsedQuery);
     } catch (error) {
+      e.target.value = "";
       await setTaskQueryIPC(id, null, null);
       console.error("엑셀 파싱 오류", error);
       toast.error(`검색 엑셀 로드에 실패했습니다. ${error}`);
@@ -151,4 +152,4 @@ const ListItem = ({ task }: Props) => {
   );
 };
 
-export default ListItem;
+export default NaraG2bListItem;

@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-export type Task = {
+export type OpenGoKrTask = {
   id: string;
   data: unknown[] | null;
   excelName: string | null;
@@ -18,7 +18,7 @@ export type Task = {
 
 class OpenGoKrController {
   private static dirName = path.dirname(fileURLToPath(import.meta.url));
-  private static tasks = new Map<string, Task>();
+  private static tasks = new Map<string, OpenGoKrTask>();
   private static scheduledTasks = new Map<string, NodeJS.Timeout>();
 
   /** READ */
@@ -27,13 +27,13 @@ class OpenGoKrController {
   }
 
   /** CREATE */
-  public static addTask(task: Task) {
+  public static addTask(task: OpenGoKrTask) {
     this.tasks.set(task.id, task);
     this.notifyUpdate();
   }
 
   /** UPDATE */
-  public static updateTask = (id: string, newValue: Partial<Task>) => {
+  public static updateTask = (id: string, newValue: Partial<OpenGoKrTask>) => {
     const task = this.tasks.get(id);
     if (task) {
       const newTask = { ...task, ...newValue };
@@ -42,7 +42,7 @@ class OpenGoKrController {
     }
   };
 
-  public static updateTaskAll = (newValue: Partial<Task>) => {
+  public static updateTaskAll = (newValue: Partial<OpenGoKrTask>) => {
     this.tasks.forEach((task, id) => {
       const updatedTask = { ...task, ...newValue };
       this.tasks.set(id, updatedTask);

@@ -16,6 +16,7 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-switch": "^1.2.5",
     "@tailwindcss/vite": "^4.1.8",
+    "bufferutil": "^4.0.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.511.0",
@@ -28,6 +29,7 @@
     "sonner": "^2.0.4",
     "tailwind-merge": "^3.3.0",
     "tailwindcss": "^4.1.8",
+    "xlsx": "^0.18.5",
     "xlsx-js-style": "^1.2.0"
   },
   "devDependencies": {
