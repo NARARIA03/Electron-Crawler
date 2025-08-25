@@ -148,7 +148,9 @@ class NaraG2bService {
     await this.delay(1000);
 
     await page.waitForSelector("span#mf_wfm_container_tbxTotCnt");
-    const totalCnt = await page.$eval("span#mf_wfm_container_tbxTotCnt", (span) => Number(span.innerText));
+    const totalCnt = await page.$eval("span#mf_wfm_container_tbxTotCnt", (span) =>
+      parseInt(span.innerText.replace(/,/g, ""))
+    );
     this.loggingService.logging(`검색 결과: ${totalCnt}개`);
 
     if (totalCnt === 0) {
