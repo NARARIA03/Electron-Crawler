@@ -1,4 +1,4 @@
-import * as XLSX from "xlsx-js-style";
+import ExcelJS from "exceljs";
 import fs from "fs";
 import path from "path";
 
@@ -17,7 +17,8 @@ type TErrorParams = TBaseParams & {
 };
 
 class XlsxService {
-  private wb: XLSX.WorkBook;
+  private wb: ExcelJS.Workbook;
+  private ws: ExcelJS.Worksheet;
   private filePath: string;
   private readonly defaultDirName = "excel_database";
 
@@ -29,103 +30,51 @@ class XlsxService {
     }
 
     this.filePath = path.join(excelDir, excelName);
-
-    if (fs.existsSync(this.filePath)) {
-      this.wb = XLSX.readFile(this.filePath);
-    } else {
-      this.wb = XLSX.utils.book_new();
-
-      const ws = XLSX.utils.aoa_to_sheet([["검색어", "기관명", "정보제목", "파일링크"]]);
-      XLSX.utils.book_append_sheet(this.wb, ws, "Sheet1");
-      this.save();
-    }
+    this.wb = new ExcelJS.Workbook();
+    this.ws = this.wb.addWorksheet("Sheet1", { pageSetup: { fitToPage: true } });
+    this.ws.addRow(["검색어", "기관명", "정보제목", "파일링크"]);
   }
 
-  public addRow() {
-    const ws = this.wb.Sheets["Sheet1"];
-    const range = XLSX.utils.decode_range(ws["!ref"] || "A1:D1");
-    const newRowIndex = range.e.r + 1;
+  public async addRow({ query, organization, title, fileLink }: TSuccessParams) {
+    const row = this.ws.addRow([query, organization, title, "파일 열기"]);
 
-    const rowNum = newRowIndex + 1;
-    const cellA = `A${rowNum}`;
-    const cellB = `B${rowNum}`;
-    const cellC = `C${rowNum}`;
-    const cellD = `D${rowNum}`;
+    const linkCell = row.getCell(4);
+    linkCell.value = { text: "파일 열기", hyperlink: fileLink };
+    linkCell.font = { underline: true, color: { theme: 10 } };
 
-    const rangeUpdator = () => {
-      const newRange = XLSX.utils.encode_range({
-        s: { c: 0, r: 0 },
-        e: { c: 3, r: newRowIndex },
-      });
-      ws["!ref"] = newRange;
-    };
+    await this.save();
+  }
 
-    return {
-      success: ({ query, organization, title, fileLink }: TSuccessParams) => {
-        ws[cellA] = { t: "s", v: query };
-        ws[cellB] = { t: "s", v: organization };
-        ws[cellC] = { t: "s", v: title };
-        ws[cellD] = {
-          t: "s",
-          v: "파일 열기",
-          l: { Target: fileLink, Tooltip: "클릭하여 파일 열기" },
-          s: { font: { color: { rgb: "0000FF" }, underline: true } },
-        };
+  public async addErrorRow({ query, organization, title, message }: TErrorParams) {
+    const row = this.ws.addRow([query, organization, title, message]);
 
-        rangeUpdator();
-        this.save();
-      },
-      error: ({ query, organization, title, message }: TErrorParams) => {
-        ws[cellA] = { t: "s", v: query };
-        ws[cellB] = { t: "s", v: organization };
-        ws[cellC] = { t: "s", v: title };
-        ws[cellD] = {
-          t: "s",
-          v: message,
-          s: { font: { color: { rgb: "FF0000" } } },
-        };
+    const errorCell = row.getCell(4);
+    errorCell.font = { color: { argb: "FFFF0000" } };
 
-        rangeUpdator();
-        this.save();
-      },
-    };
+    await this.save();
   }
 
   private autoFitColumns() {
-    const ws = this.wb.Sheets["Sheet1"];
-    const range = XLSX.utils.decode_range(ws["!ref"] || "A1:D1");
-
     const colWidths: number[] = [];
 
-    // 각 열별로 최대 너비 계산
-    for (let C = range.s.c; C <= range.e.c; ++C) {
-      let maxWidth = 8; // 최소 너비
+    this.ws.eachRow((row) => {
+      row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+        const cellValue = cell.value ? String(cell.value) : "";
+        let cellWidth = 0;
 
-      for (let R = range.s.r; R <= range.e.r; ++R) {
-        const cellAddress = XLSX.utils.encode_cell({ c: C, r: R });
-        const cell = ws[cellAddress];
-
-        if (cell && cell.v) {
-          const cellValue = String(cell.v);
-          let width = 0;
-          for (const char of cellValue) {
-            // 한글, 한자, 일본어 등 2바이트 문자는 2배 너비
-            width += char.match(/[\u3131-\uD79D]/) ? 2 : 1;
-          }
-          maxWidth = Math.max(maxWidth, width);
+        for (const char of cellValue) {
+          cellWidth += /[\u3131-\uD79D]/.test(char) ? 2 : 1;
         }
-      }
+        colWidths[colNumber - 1] = Math.max(colWidths[colNumber - 1] || 10, cellWidth + 2);
+      });
+    });
 
-      colWidths[C] = maxWidth + 5; // 여백 +5
-    }
-
-    // 열 너비 설정
-    ws["!cols"] = colWidths.map((w) => ({ wch: w }));
+    this.ws.columns = colWidths.map((width) => ({ width }));
   }
 
-  public save() {
+  public async save() {
     this.autoFitColumns();
-    XLSX.writeFile(this.wb, this.filePath, { bookSST: false, cellStyles: true });
+    await this.wb.xlsx.writeFile(this.filePath);
   }
 
   public getFilePath(): string {
