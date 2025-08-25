@@ -1,5 +1,5 @@
 import { Input, Table } from "@/components";
-import type { Task } from "../types";
+import type { OpenGoKrTaskFE } from "../types";
 import { Play, Send, Trash2 } from "lucide-react";
 import { useEffect, useState, type ChangeEvent } from "react";
 import { toast } from "sonner";
@@ -15,7 +15,7 @@ import {
 } from "../utils/ipc";
 
 type Props = {
-  task: Task;
+  task: OpenGoKrTaskFE;
 };
 
 const OpenGoKrListItem = ({ task }: Props) => {

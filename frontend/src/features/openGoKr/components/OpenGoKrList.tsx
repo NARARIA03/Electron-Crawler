@@ -2,11 +2,11 @@ import { Button, Table } from "@/components";
 import { Plus } from "lucide-react";
 import OpenGoKrListItem from "./OpenGoKrListItem";
 import { useEffect, useState } from "react";
-import type { Task } from "../types";
+import type { OpenGoKrTaskFE } from "../types";
 import { addRowIPC, getAllTasksIPC } from "../utils/ipc";
 
 const OpenGoKrList = () => {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<OpenGoKrTaskFE[]>([]);
 
   // 초기 데이터 로드
   useEffect(() => {
@@ -18,7 +18,7 @@ const OpenGoKrList = () => {
 
   // 데이터 변경 감지 -> 업데이트
   useEffect(() => {
-    const handleUpdate = (_: unknown, tasks: Task[]) => {
+    const handleUpdate = (_: unknown, tasks: OpenGoKrTaskFE[]) => {
       setTasks(tasks);
     };
 

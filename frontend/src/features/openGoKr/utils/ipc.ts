@@ -1,12 +1,12 @@
-import type { Task } from "../types";
+import type { OpenGoKrTaskFE } from "../types";
 
-export const getAllTasksIPC = (): Promise<Task[]> => {
+export const getAllTasksIPC = (): Promise<OpenGoKrTaskFE[]> => {
   return window.ipcRenderer.invoke("openGoKr:getAllTasks");
 };
 
 export const addRowIPC = async () => {
   const id = Date.now().toString();
-  const newTask: Task = {
+  const newTask: OpenGoKrTaskFE = {
     id,
     data: null,
     excelName: null,
@@ -29,7 +29,7 @@ export const initializeTaskIPC = async (id: string, baseDir: string | null, debu
   return window.ipcRenderer.invoke("openGoKr:updateTask", id, { baseDir, debug });
 };
 
-export const updateTaskAllIPC = async (newValue: Partial<Task>) => {
+export const updateTaskAllIPC = async (newValue: Partial<OpenGoKrTaskFE>) => {
   return window.ipcRenderer.invoke("openGoKr:updateTaskAll", newValue);
 };
 
