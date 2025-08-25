@@ -7,6 +7,8 @@ export const LandingPage = () => {
 
   const onOpenGoKrClick = () => navigate("/openGoKr");
 
+  const onNaraG2bClick = () => navigate("/naraG2b");
+
   const handleNotImplementedClick = () => toast.warning("아직 구현 중인 기능입니다.");
 
   return (
@@ -19,7 +21,7 @@ export const LandingPage = () => {
         <Button size="lg" onClick={handleNotImplementedClick}>
           <Paragraph>컴시간알리미</Paragraph>
         </Button>
-        <Button size="lg" onClick={handleNotImplementedClick}>
+        <Button size="lg" onClick={onNaraG2bClick}>
           <Paragraph>나라장터</Paragraph>
         </Button>
       </div>

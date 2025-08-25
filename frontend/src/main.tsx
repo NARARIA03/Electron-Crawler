@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { Toaster } from "./components";
-import { ComsiganAlertPage, LandingPage, NaraJangterPage, OpenGoKrPage } from "./pages";
+import { ComsiganAlertPage, LandingPage, NaraG2bPage, OpenGoKrPage } from "./pages";
 import "./index.css";
 import { OverlayProvider } from "overlay-kit";
 
@@ -15,7 +15,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <Route path="/" element={<LandingPage />} />
             <Route path="/openGoKr" element={<OpenGoKrPage />} />
             <Route path="/comsiganAlert" element={<ComsiganAlertPage />} />
-            <Route path="/naraJangter" element={<NaraJangterPage />} />
+            <Route path="/naraG2b" element={<NaraG2bPage />} />
           </Routes>
           <Toaster position="top-right" richColors closeButton />
         </HashRouter>
