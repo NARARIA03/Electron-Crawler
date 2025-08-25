@@ -116,3 +116,5 @@ The Python executable can be tested independently:
 
 - **Language Preference**:
   - 앞으로 한국어로 대답해줘.
+- PR 작성 시 제목은 "[{target-branch-name}] {기능 요약}" 형태로
+- PR 작성 시 test-plan은 제외
