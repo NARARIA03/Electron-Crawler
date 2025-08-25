@@ -39,7 +39,7 @@ const OpenGoKrSettingModal = ({ isOpen, onClose }: Props) => {
 
   const handleDownloadQueryExcel = () => {
     try {
-      window.ipcRenderer.invoke(DOWNLOAD_QUERY_EXCEL);
+      window.ipcRenderer.invoke(DOWNLOAD_QUERY_EXCEL, "정보공개포털query.xlsx");
       toast.success("다운로드 폴더에 검색어 설정용 xlsx가 저장되었습니다.");
     } catch (e) {
       console.error(e);
