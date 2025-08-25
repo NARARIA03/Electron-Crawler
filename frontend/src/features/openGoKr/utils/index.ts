@@ -1,31 +1,36 @@
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 
 export const parseExcelQuery = async (excelFile: File): Promise<unknown[]> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
-        const data = event.target?.result;
-        const wb = XLSX.read(data, { type: "binary" });
-        const sheetName = wb.SheetNames[0];
-        const ws = wb.Sheets[sheetName];
-        const sheetRange = XLSX.utils.decode_range(ws["!ref"]!);
+        const arrayBuffer = event.target?.result as ArrayBuffer;
+        const wb = new ExcelJS.Workbook();
+        await wb.xlsx.load(arrayBuffer);
 
-        const result = [];
+        const ws = wb.getWorksheet(1);
+        if (!ws) throw new Error("워크시트를 찾을 수 없습니다");
 
-        for (let row = 5; row <= sheetRange.e.r; row++) {
-          const rowData = {
-            query: getRequiredCellValue(ws, row, 0),
-            organization: getRequiredCellValue(ws, row, 1),
-            location: getRequiredCellValue(ws, row, 2),
-            include: getNullableCellValue(ws, row, 3),
-            exclude: getNullableCellValue(ws, row, 4),
-            startDate: getRequiredCellValue(ws, row, 5),
-            endDate: getRequiredCellValue(ws, row, 6),
-          };
-          result.push(rowData);
-        }
+        const result: unknown[] = [];
+
+        // 6번째 행부터 시작
+        ws.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+          if (rowNumber >= 6) {
+            // 6번째 행부터
+            const rowData = {
+              query: getRequiredCellValue(row, 1),
+              organization: getRequiredCellValue(row, 2),
+              location: getRequiredCellValue(row, 3),
+              include: getNullableCellValue(row, 4),
+              exclude: getNullableCellValue(row, 5),
+              startDate: getRequiredCellValue(row, 6),
+              endDate: getRequiredCellValue(row, 7),
+            };
+            result.push(rowData);
+          }
+        });
         resolve(result);
       } catch (err) {
         reject(err);
@@ -33,26 +38,26 @@ export const parseExcelQuery = async (excelFile: File): Promise<unknown[]> => {
     };
 
     reader.onerror = (error) => reject(error);
-    reader.readAsBinaryString(excelFile);
+    reader.readAsArrayBuffer(excelFile);
   });
 };
 
-const getRequiredCellValue = (ws: XLSX.WorkSheet, row: number, col: number): string => {
-  const cellAddress = XLSX.utils.encode_cell({ c: col, r: row });
-  const cell = ws[cellAddress];
+const getRequiredCellValue = (row: ExcelJS.Row, col: number): string => {
+  const cell = row.getCell(col);
+  const value = cell.value;
 
-  if (!cell || cell.v === undefined || cell.v === null || String(cell.v).trim() === "") {
-    throw new Error(`필수값 누락 (행 ${row + 1}열 ${col + 1})`);
+  if (!value || value === null || String(value).trim() === "") {
+    throw new Error(`필수값 누락 (행 ${row.number}열 ${col})`);
   }
-  return String(cell.v).trim();
+  return String(value).trim();
 };
 
-const getNullableCellValue = (ws: XLSX.WorkSheet, row: number, col: number): string | "null" => {
-  const cellAddress = XLSX.utils.encode_cell({ c: col, r: row });
-  const cell = ws[cellAddress];
+const getNullableCellValue = (row: ExcelJS.Row, col: number): string | "null" => {
+  const cell = row.getCell(col);
+  const value = cell.value;
 
-  if (!cell || cell.v === undefined || cell.v === null || String(cell.v).trim() === "") {
+  if (!value || value === null || String(value).trim() === "") {
     return "null";
   }
-  return String(cell.v).trim();
+  return String(value).trim();
 };

@@ -65,7 +65,7 @@ class NaraG2bService {
       this.loggingService = null;
     }
     if (this.xlsxService) {
-      this.xlsxService.save();
+      await this.xlsxService.save();
       this.xlsxService = null;
     }
     await this.delay(5000);
@@ -126,7 +126,7 @@ class NaraG2bService {
       await page.locator(`::-p-xpath(//nobr/a[contains(text(), '${location}')])`).click();
       this.loggingService.logging("수요기관 선택 완료");
     } catch (error) {
-      this.xlsxService.addRow().error({ query, organization, title: "", message: "수요기관 존재하지 않음" });
+      await this.xlsxService.addErrorRow({ query, organization, title: "", message: "수요기관 존재하지 않음" });
       throw new Error(`수요기관 "${location}"이 존재하지 않습니다`);
     }
 
@@ -154,7 +154,7 @@ class NaraG2bService {
     this.loggingService.logging(`검색 결과: ${totalCnt}개`);
 
     if (totalCnt === 0) {
-      this.xlsxService.addRow().error({ query, organization, title: "", message: "검색 결과 없음" });
+      await this.xlsxService.addErrorRow({ query, organization, title: "", message: "검색 결과 없음" });
       throw new Error("검색 결과가 0건입니다.");
     }
 
@@ -205,10 +205,10 @@ class NaraG2bService {
             const filePath = path.join(filesDir, `${i}-${j}-generated.pdf`);
             fs.writeFileSync(filePath, pdfBuffer);
             this.loggingService.logging("PDF 파일 다운 성공");
-            this.xlsxService.addRow().success({ query, organization, title, fileLink: filePath });
+            await this.xlsxService.addRow({ query, organization, title, fileLink: filePath });
           } else {
             this.loggingService.logging("PDF 파일 다운 실패");
-            this.xlsxService.addRow().error({ query, organization, title, message: "파일 다운 실패" });
+            await this.xlsxService.addErrorRow({ query, organization, title, message: "파일 다운 실패" });
           }
           this.loggingService.logging("엑셀에 데이터 기록 완료");
 
