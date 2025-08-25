@@ -20,8 +20,8 @@ export const parseExcelQuery = async (excelFile: File): Promise<NaraG2bDataFE[]>
             query: getCellValue(ws, row, 0),
             organization: getCellValue(ws, row, 1),
             location: getCellValue(ws, row, 2),
-            startDate: getCellValue(ws, row, 5),
-            endDate: getCellValue(ws, row, 6),
+            startDate: getCellValue(ws, row, 3),
+            endDate: getCellValue(ws, row, 4),
           };
           result.push(rowData);
         }
