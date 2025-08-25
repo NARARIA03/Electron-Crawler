@@ -1,10 +1,10 @@
 import { H2 } from "@/components";
 import { ArrowLeft, Settings } from "lucide-react";
 import { overlay } from "overlay-kit";
-import SettingModal from "./SettingModal";
+import OpenGoKrSettingModal from "./OpenGoKrSettingModal";
 import { useNavigate } from "react-router-dom";
 
-const Header = () => {
+const OpenGoKrHeader = () => {
   const navigate = useNavigate();
 
   const goToBack = () => navigate(-1);
@@ -15,10 +15,10 @@ const Header = () => {
       <H2>정보공개포털 페이지</H2>
       <Settings
         className="cursor-pointer hover:text-primary/60"
-        onClick={() => overlay.open(({ isOpen, close }) => <SettingModal isOpen={isOpen} onClose={close} />)}
+        onClick={() => overlay.open(({ isOpen, close }) => <OpenGoKrSettingModal isOpen={isOpen} onClose={close} />)}
       />
     </div>
   );
 };
 
-export default Header;
+export default OpenGoKrHeader;

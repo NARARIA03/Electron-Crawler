@@ -12,7 +12,7 @@ type Props = {
   onClose: () => void;
 };
 
-const SettingModal = ({ isOpen, onClose }: Props) => {
+const NaraG2bSettingModal = ({ isOpen, onClose }: Props) => {
   const [downloadDir, setDownloadDir] = useState<string | null>(() => getDownloadDirectory());
   const [debug, setDebug] = useState<string | null>(() => getDebugMode());
 
@@ -33,13 +33,13 @@ const SettingModal = ({ isOpen, onClose }: Props) => {
 
   const handleDebugCheckedChange = (checked: boolean) => {
     setDebug(JSON.stringify(checked));
-    updateTaskAllIPC({ debug: JSON.stringify(checked) });
+    updateTaskAllIPC({ debug: checked });
     setDebugMode(checked);
   };
 
   const handleDownloadQueryExcel = () => {
     try {
-      window.ipcRenderer.invoke(DOWNLOAD_QUERY_EXCEL);
+      window.ipcRenderer.invoke(DOWNLOAD_QUERY_EXCEL, "나라장터query.xlsx");
       toast.success("다운로드 폴더에 검색어 설정용 xlsx가 저장되었습니다.");
     } catch (e) {
       console.error(e);
@@ -88,4 +88,4 @@ const SettingModal = ({ isOpen, onClose }: Props) => {
   );
 };
 
-export default SettingModal;
+export default NaraG2bSettingModal;

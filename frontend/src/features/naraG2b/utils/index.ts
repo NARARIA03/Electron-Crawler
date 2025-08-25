@@ -1,6 +1,7 @@
 import ExcelJS from "exceljs";
+import type { NaraG2bDataFE } from "../types";
 
-export const parseExcelQuery = async (excelFile: File): Promise<unknown[]> => {
+export const parseExcelQuery = async (excelFile: File): Promise<NaraG2bDataFE[]> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
@@ -13,20 +14,16 @@ export const parseExcelQuery = async (excelFile: File): Promise<unknown[]> => {
         const ws = wb.getWorksheet(1);
         if (!ws) throw new Error("워크시트를 찾을 수 없습니다");
 
-        const result: unknown[] = [];
+        const result: NaraG2bDataFE[] = [];
 
-        // 6번째 행부터 시작
         ws.eachRow({ includeEmpty: false }, (row, rowNumber) => {
           if (rowNumber >= 6) {
-            // 6번째 행부터
             const rowData = {
-              query: getRequiredCellValue(row, 1),
-              organization: getRequiredCellValue(row, 2),
-              location: getRequiredCellValue(row, 3),
-              include: getNullableCellValue(row, 4),
-              exclude: getNullableCellValue(row, 5),
-              startDate: getRequiredCellValue(row, 6),
-              endDate: getRequiredCellValue(row, 7),
+              query: getCellValue(row, 1),
+              organization: getCellValue(row, 2),
+              location: getCellValue(row, 3),
+              startDate: getCellValue(row, 4),
+              endDate: getCellValue(row, 5),
             };
             result.push(rowData);
           }
@@ -42,22 +39,12 @@ export const parseExcelQuery = async (excelFile: File): Promise<unknown[]> => {
   });
 };
 
-const getRequiredCellValue = (row: ExcelJS.Row, col: number): string => {
+const getCellValue = (row: ExcelJS.Row, col: number): string => {
   const cell = row.getCell(col);
   const value = cell.value;
 
   if (!value || value === null || String(value).trim() === "") {
     throw new Error(`필수값 누락 (행 ${row.number}열 ${col})`);
-  }
-  return String(value).trim();
-};
-
-const getNullableCellValue = (row: ExcelJS.Row, col: number): string | "null" => {
-  const cell = row.getCell(col);
-  const value = cell.value;
-
-  if (!value || value === null || String(value).trim() === "") {
-    return "null";
   }
   return String(value).trim();
 };

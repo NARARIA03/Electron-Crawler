@@ -1,4 +1,4 @@
-export type Task = {
+export type OpenGoKrTaskFE = {
   id: string;
   data: unknown[] | null;
   scheduledTime?: Date;
