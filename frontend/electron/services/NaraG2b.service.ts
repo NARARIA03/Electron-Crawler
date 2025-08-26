@@ -9,7 +9,6 @@ export type NaraG2bCrawlData = {
   startDate: string;
   endDate: string;
   organization?: string; // 기관명 - 개운중학교
-  location?: string; // 지역명 - 서울특별시교육청
 };
 
 type Params = {
@@ -88,11 +87,11 @@ class NaraG2bService {
     }
   }
 
-  private async query({ query, startDate, endDate, organization, location }: NaraG2bCrawlData) {
+  private async query({ query, startDate, endDate, organization }: NaraG2bCrawlData) {
     if (!this.browser) throw new Error("브라우저 초기화 실패");
     if (!this.loggingService) throw new Error("에러 로깅 서비스 초기화 실패");
     if (!this.xlsxService) throw new Error("xlsx 서비스 초기화 실패");
-    if (!location || !organization) throw new Error("location, organization이 비어있습니다");
+    if (!organization) throw new Error("organization이 비어있습니다");
 
     const page = await this.browser.newPage();
     await page.goto("https://www.g2b.go.kr/");
@@ -121,13 +120,14 @@ class NaraG2bService {
 
     await page.waitForSelector("#___processbar2_i", { hidden: true });
     this.loggingService.logging("로딩 프로세스바 사라짐 확인");
+    await this.delay(100000);
 
     try {
-      await page.locator(`::-p-xpath(//nobr/a[contains(text(), '${location}')])`).click();
+      await page.locator(`::-p-xpath(//nobr/a[contains(text())])`).click();
       this.loggingService.logging("수요기관 선택 완료");
     } catch (error) {
       await this.xlsxService.addErrorRow({ query, organization, title: "", message: "수요기관 존재하지 않음" });
-      throw new Error(`수요기관 "${location}"이 존재하지 않습니다`);
+      throw new Error(`수요기관이 존재하지 않습니다`);
     }
 
     const parsedStartDate = startDate.split("-").join("");
@@ -227,7 +227,7 @@ class NaraG2bService {
         }
       }
     }
-    this.loggingService.logging(`${query}-${organization}-${location}크롤링 완료`);
+    this.loggingService.logging(`${query}-${organization} 크롤링 완료`);
   }
 }
 
