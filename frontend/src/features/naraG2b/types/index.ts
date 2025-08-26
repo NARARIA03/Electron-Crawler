@@ -13,5 +13,4 @@ export type NaraG2bDataFE = {
   startDate: string;
   endDate: string;
   organization?: string; // 기관명 - 개운중학교
-  location?: string; // 지역명 - 서울특별시교육청
 };

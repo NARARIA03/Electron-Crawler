@@ -9,7 +9,6 @@ export type NaraG2bCrawlData = {
   startDate: string;
   endDate: string;
   organization?: string; // 기관명 - 개운중학교
-  location?: string; // 지역명 - 서울특별시교육청
 };
 
 type Params = {
@@ -88,11 +87,11 @@ class NaraG2bService {
     }
   }
 
-  private async query({ query, startDate, endDate, organization, location }: NaraG2bCrawlData) {
+  private async query({ query, startDate, endDate, organization }: NaraG2bCrawlData) {
     if (!this.browser) throw new Error("브라우저 초기화 실패");
     if (!this.loggingService) throw new Error("에러 로깅 서비스 초기화 실패");
     if (!this.xlsxService) throw new Error("xlsx 서비스 초기화 실패");
-    if (!location || !organization) throw new Error("location, organization이 비어있습니다");
+    if (!organization) throw new Error("organization이 비어있습니다");
 
     const page = await this.browser.newPage();
     await page.goto("https://www.g2b.go.kr/");
@@ -110,24 +109,34 @@ class NaraG2bService {
 
     await page.locator('input[title="검색어 입력"]').fill(query);
     this.loggingService.logging("검색어 query 입력 성공");
+    const inputQuery = await page.$eval('input[title="검색어 입력"]', (el) => el.value);
+    this.loggingService.logging(`입력된 검색어: ${inputQuery}`);
 
     await page.locator('::-p-xpath(//label[text()="수요기관"]/parent::div//input[@value="검색"])').click();
+    await page.waitForNetworkIdle({ idleTime: 1000 });
     this.loggingService.logging("수요기관 모달 오픈 성공");
 
     await page.locator('td[data-title="수요기관명"] input').fill(organization);
     this.loggingService.logging("수요기관명 입력 성공");
+    const inputOrganization = await page.$eval('td[data-title="수요기관명"] input', (el) => el.value);
+    this.loggingService.logging(`입력된 기관명: ${inputOrganization}`);
+
     await page.keyboard.press("Enter");
     this.loggingService.logging("수요기관 검색 버튼 클릭 성공");
 
     await page.waitForSelector("#___processbar2_i", { hidden: true });
+    await page.waitForNetworkIdle({ idleTime: 1000 });
     this.loggingService.logging("로딩 프로세스바 사라짐 확인");
 
     try {
-      await page.locator(`::-p-xpath(//nobr/a[contains(text(), '${location}')])`).click();
+      const isNotDeletedXPath = `//tr[td[@col_id='instDelYn']//nobr[text()='N']]`;
+      const organizationXPath = `/td[@col_id='grpNm']//a[contains(text(),'${organization}')]`;
+
+      await page.locator(`::-p-xpath(${isNotDeletedXPath}${organizationXPath})`).click();
       this.loggingService.logging("수요기관 선택 완료");
     } catch (error) {
       await this.xlsxService.addErrorRow({ query, organization, title: "", message: "수요기관 존재하지 않음" });
-      throw new Error(`수요기관 "${location}"이 존재하지 않습니다`);
+      throw new Error(`수요기관이 존재하지 않습니다`);
     }
 
     const parsedStartDate = startDate.split("-").join("");
@@ -227,7 +236,7 @@ class NaraG2bService {
         }
       }
     }
-    this.loggingService.logging(`${query}-${organization}-${location}크롤링 완료`);
+    this.loggingService.logging(`${query}-${organization} 크롤링 완료`);
   }
 }
 
