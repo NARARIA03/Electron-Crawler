@@ -141,6 +141,29 @@ test("NaraG2b 검색어 없는 케이스 / 여러 수요 기관 검색되는 경
   NaraG2bController.addTask(task);
   await NaraG2bController.runTask(task.id);
   NaraG2bController.cancelTask(task.id);
+
+  const excelPath = path.join(baseDir, "excel_database", "테스트", "테스트.xlsx");
+  const wb = new ExcelJS.Workbook();
+  await wb.xlsx.readFile(excelPath);
+  const ws = wb.getWorksheet("Sheet1");
+
+  expect(ws).toBeDefined();
+
+  const headerRow = ws?.getRow(1);
+  expect(headerRow?.getCell(1).value).toBe("검색어");
+  expect(headerRow?.getCell(2).value).toBe("기관명");
+  expect(headerRow?.getCell(3).value).toBe("정보제목");
+  expect(headerRow?.getCell(4).value).toBe("파일링크");
+
+  const dataRow = ws?.getRow(2);
+  expect(dataRow?.getCell(1).value).toBe(task.data?.[0].query);
+  expect(dataRow?.getCell(2).value).toBe(task.data?.[0].organization);
+  expect(dataRow?.getCell(3).value).toBeDefined();
+  expect(dataRow?.getCell(4).value).toBeDefined();
+
+  const linkCell = dataRow?.getCell(4);
+  expect(linkCell?.font?.color?.theme).toBe(10);
+  expect(linkCell?.font?.underline).toBe(true);
 });
 
 test("NaraG2B 즉시 실행 테스트", async () => {
