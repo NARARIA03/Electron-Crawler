@@ -17,10 +17,10 @@ test("NaraG2B 검색 결과가 없는 경우", async () => {
     id,
     data: [
       {
-        query: "소모dsfskjdflks",
+        query: "소모  dsfskjdflks",
         startDate: "2024-08-25",
         endDate: "2025-08-24",
-        organization: "경기기계공업고등학교",
+        organization: "서울특별시교육청 경기기계공업고등학교",
       },
     ],
     excelName: "테스트.xlsx",
@@ -31,6 +31,7 @@ test("NaraG2B 검색 결과가 없는 경우", async () => {
 
   NaraG2bController.addTask(task);
   await NaraG2bController.runTask(task.id);
+  NaraG2bController.cancelTask(task.id);
 });
 
 test("NaraG2B 수요 기관이 없는 경우", async () => {
@@ -40,10 +41,10 @@ test("NaraG2B 수요 기관이 없는 경우", async () => {
     id,
     data: [
       {
-        query: "소모dsfskjdflks",
+        query: "소모",
         startDate: "2024-08-25",
         endDate: "2025-08-24",
-        organization: "경기기계공업123고등학교",
+        organization: "없는 기관",
       },
     ],
     excelName: "테스트.xlsx",
@@ -54,9 +55,10 @@ test("NaraG2B 수요 기관이 없는 경우", async () => {
 
   NaraG2bController.addTask(task);
   await NaraG2bController.runTask(task.id);
+  NaraG2bController.cancelTask(task.id);
 });
 
-test("NaraG2b 여러 수요 기관 검색되는 경우 테스트", async () => {
+test("NaraG2b 검색어 없는 케이스 / 여러 수요 기관 검색되는 경우 테스트", async () => {
   const id = Date.now().toString();
 
   const task: NaraG2bTask = {
@@ -64,7 +66,7 @@ test("NaraG2b 여러 수요 기관 검색되는 경우 테스트", async () => {
     data: [
       {
         query: "",
-        startDate: "2025-01-01",
+        startDate: "2025-08-20",
         endDate: "2025-08-24",
         organization: "가림고등학교",
       },
@@ -77,6 +79,7 @@ test("NaraG2b 여러 수요 기관 검색되는 경우 테스트", async () => {
 
   NaraG2bController.addTask(task);
   await NaraG2bController.runTask(task.id);
+  NaraG2bController.cancelTask(task.id);
 });
 
 test("NaraG2B 즉시 실행 테스트", async () => {
@@ -87,9 +90,9 @@ test("NaraG2B 즉시 실행 테스트", async () => {
     data: [
       {
         query: "소모",
-        startDate: "2024-08-25",
+        startDate: "2025-01-20",
         endDate: "2025-08-24",
-        organization: "경기기계공업고등학교",
+        organization: "서울특별시교육청 경기기계공업고등학교",
       },
     ],
     excelName: "테스트.xlsx",
@@ -100,4 +103,5 @@ test("NaraG2B 즉시 실행 테스트", async () => {
 
   NaraG2bController.addTask(task);
   await NaraG2bController.runTask(task.id);
+  NaraG2bController.cancelTask(task.id);
 });
