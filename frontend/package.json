@@ -50,7 +50,8 @@
   },
   "main": "dist-electron/main.js",
   "build": {
-    "asar": false,
+    "asar": true,
+    "asarUnpack": "node_modules/puppeteer/**/*",
     "win": {
       "target": [
         "nsis",
