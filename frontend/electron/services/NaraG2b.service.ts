@@ -47,6 +47,7 @@ class NaraG2bService {
         "--no-zygote",
         "--disable-gpu",
       ],
+      executablePath: puppeteer.executablePath().replace("app.assr", "app.assr.unpacked"),
     });
 
     this.loggingService = new LoggingService(this.baseDir, this.excelName);
