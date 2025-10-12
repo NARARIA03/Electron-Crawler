@@ -51,6 +51,7 @@
   "main": "dist-electron/main.js",
   "build": {
     "asar": true,
+    "asarUnpack": "node_modules/puppeteer/.local-chromium/**/*",
     "win": {
       "target": [
         "nsis",
