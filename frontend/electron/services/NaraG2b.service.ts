@@ -36,23 +36,28 @@ class NaraG2bService {
   }
 
   private async setUp() {
-    this.browser = await puppeteer.launch({
-      headless: !this.debug,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-accelerated-2d-canvas",
-        "--no-first-run",
-        "--no-zygote",
-        "--disable-gpu",
-      ],
-      executablePath: puppeteer.executablePath().replace("app.asar", "app.asar.unpacked"),
-    });
+    console.log(puppeteer.executablePath().replace("app.asar", "app.asar.unpacked"));
+    try {
+      this.browser = await puppeteer.launch({
+        headless: !this.debug,
+        args: [
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-accelerated-2d-canvas",
+          "--no-first-run",
+          "--no-zygote",
+          "--disable-gpu",
+        ],
+        executablePath: puppeteer.executablePath().replace("app.asar", "app.asar.unpacked"),
+      });
 
-    this.loggingService = new LoggingService(this.baseDir, this.excelName);
-    this.xlsxService = new XlsxService(this.baseDir, this.excelName);
-    this.loggingService.logging(`엑셀 파일 생성 완료: ${this.xlsxService.getFilePath()}`);
+      this.loggingService = new LoggingService(this.baseDir, this.excelName);
+      this.xlsxService = new XlsxService(this.baseDir, this.excelName);
+      this.loggingService.logging(`엑셀 파일 생성 완료: ${this.xlsxService.getFilePath()}`);
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   public async close() {
