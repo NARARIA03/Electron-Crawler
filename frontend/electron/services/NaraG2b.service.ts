@@ -127,9 +127,11 @@ class NaraG2bService {
 
     await page.locator('span[aria-label="Go to slide 2"]').click();
     this.loggingService.logging("검색ON 버튼 클릭 성공");
+    await this.delay(1000);
 
     await page.locator('input[title="통합상세"]').click();
     this.loggingService.logging("통합 상세 버튼 클릭 성공");
+    await this.delay(1000);
 
     await page.locator('input[title="검색어 입력"]').fill(query);
     this.loggingService.logging("검색어 query 입력 성공");
@@ -145,6 +147,7 @@ class NaraG2bService {
     const inputOrganization = await page.$eval('td[data-title="수요기관명"] input', (el) => el.value);
     this.loggingService.logging(`입력된 기관명: ${inputOrganization}`);
 
+    await this.delay(1000);
     await page.keyboard.press("Enter");
     this.loggingService.logging("수요기관 검색 버튼 클릭 성공");
 
