@@ -36,7 +36,6 @@ class NaraG2bService {
   }
 
   private async setUp() {
-    console.log(puppeteer.executablePath().replace("app.asar", "app.asar.unpacked"));
     try {
       this.browser = await puppeteer.launch({
         headless: !this.debug,
@@ -49,7 +48,6 @@ class NaraG2bService {
           "--no-zygote",
           "--disable-gpu",
         ],
-        executablePath: puppeteer.executablePath().replace("app.asar", "app.asar.unpacked"),
       });
 
       this.loggingService = new LoggingService(this.baseDir, this.excelName);
