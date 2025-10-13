@@ -2,7 +2,8 @@ import puppeteer, { Browser } from "puppeteer";
 import LoggingService from "./Logging.service";
 import XlsxService from "./Xlsx.service";
 import fs from "fs";
-import path from "path";
+import path from "node:path";
+import { app } from "electron";
 
 export type NaraG2bCrawlData = {
   query: string; // 검색어 - 신발장
@@ -35,6 +36,17 @@ class NaraG2bService {
     this.debug = debug;
   }
 
+  private getExecutablePath() {
+    const chromePath = puppeteer.executablePath().replace(/^(\.\.\/)+/, "");
+    const packegedPath = path.join(process.resourcesPath, chromePath);
+    const devPath = chromePath;
+
+    const executablePath = app.isPackaged ? packegedPath : devPath;
+
+    console.log("executablePath: ", executablePath);
+    return executablePath;
+  }
+
   private async setUp() {
     try {
       this.browser = await puppeteer.launch({
@@ -48,6 +60,7 @@ class NaraG2bService {
           "--no-zygote",
           "--disable-gpu",
         ],
+        executablePath: this.getExecutablePath(),
       });
 
       this.loggingService = new LoggingService(this.baseDir, this.excelName);
