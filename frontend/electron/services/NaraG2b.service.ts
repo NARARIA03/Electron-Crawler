@@ -38,10 +38,10 @@ class NaraG2bService {
 
   private getExecutablePath() {
     const chromePath = puppeteer.executablePath().replace(/^(\.\.\/)+/, "");
-    const packegedPath = path.join(process.resourcesPath, chromePath);
+    const packagedPath = path.join(process.resourcesPath, chromePath);
     const devPath = chromePath;
 
-    const executablePath = app.isPackaged ? packegedPath : devPath;
+    const executablePath = app.isPackaged ? packagedPath : devPath;
 
     console.log("executablePath: ", executablePath);
     return executablePath;
