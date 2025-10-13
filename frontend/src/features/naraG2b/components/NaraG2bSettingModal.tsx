@@ -40,7 +40,7 @@ const NaraG2bSettingModal = ({ isOpen, onClose }: Props) => {
   const handleDownloadQueryExcel = () => {
     try {
       window.ipcRenderer.invoke(DOWNLOAD_QUERY_EXCEL, "나라장터query.xlsx");
-      toast.success("다운로드 폴더에 검색어 설정용 xlsx가 저장되었습니다.");
+      toast.success("다운로드 폴더에 나라장터 검색어 설정용 xlsx가 저장되었습니다.");
     } catch (e) {
       console.error(e);
       toast.error("다운로드 중 에러가 발생했습니다");
@@ -73,7 +73,7 @@ const NaraG2bSettingModal = ({ isOpen, onClose }: Props) => {
             </div>
           </div>
           <div className="mb-8">
-            <p className="text-zinc-600 mb-2 select-none">검색 설정용 xlsx 다운로드:</p>
+            <p className="text-zinc-600 mb-2 select-none">나라장터 검색 설정용 xlsx 다운로드:</p>
             <Button className="w-full mt-2" onClick={handleDownloadQueryExcel}>
               다운로드
             </Button>
