@@ -51,7 +51,6 @@
   "main": "dist-electron/main.js",
   "build": {
     "asar": true,
-    "asarUnpack": "node_modules/puppeteer/**/*",
     "win": {
       "target": [
         "nsis",
@@ -61,7 +60,8 @@
     "files": [
       "dist/**/*",
       "dist-electron/**/*",
-      "package.json"
+      "package.json",
+      ".cache/puppeteer/**/*"
     ],
     "extraResources": [
       {
@@ -74,6 +74,13 @@
       {
         "from": "./excel",
         "to": "excel/",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": ".cache/puppeteer",
+        "to": ".cache/puppeteer",
         "filter": [
           "**/*"
         ]
