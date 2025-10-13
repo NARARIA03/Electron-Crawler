@@ -37,14 +37,21 @@ class NaraG2bService {
   }
 
   private getExecutablePath() {
-    const chromePath = puppeteer.executablePath().replace(/^(\.\.\/)+/, "");
-    const packagedPath = path.join(process.resourcesPath, chromePath);
-    const devPath = chromePath;
+    const chromePath = puppeteer.executablePath();
 
-    const executablePath = app.isPackaged ? packagedPath : devPath;
+    if (app.isPackaged) {
+      const idx = chromePath.indexOf(".cache");
+      if (idx !== -1) {
+        const relativePath = chromePath.substring(idx);
+        const packagedPath = path.join(process.resourcesPath, relativePath);
+        console.log("executablePath (packaged): ", packagedPath);
+        return packagedPath;
+      }
+    }
 
-    console.log("executablePath: ", executablePath);
-    return executablePath;
+    const unpackagedPath = chromePath.replace(/^(\.\.\/)+/, "");
+    console.log("executablePath (dev): ", unpackagedPath);
+    return unpackagedPath;
   }
 
   private async setUp() {
