@@ -12,5 +12,6 @@ export type NaraG2bDataFE = {
   query: string; // 검색어 - 신발장
   startDate: string;
   endDate: string;
-  organization?: string; // 기관명 - 개운중학교
+  organization: string; // 기관명 - 개운중학교
+  region: string; // 지역 - 서울
 };

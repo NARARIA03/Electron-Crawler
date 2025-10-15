@@ -9,7 +9,8 @@ export type NaraG2bCrawlData = {
   query: string; // 검색어 - 신발장
   startDate: string;
   endDate: string;
-  organization?: string; // 기관명 - 개운중학교
+  organization: string; // 기관명 - 개운중학교
+  region: string; // 지역 - 서울
 };
 
 type Params = {
@@ -111,7 +112,7 @@ class NaraG2bService {
     }
   }
 
-  private async query({ query, startDate, endDate, organization }: NaraG2bCrawlData) {
+  private async query({ query, startDate, endDate, organization, region }: NaraG2bCrawlData) {
     if (!this.browser) throw new Error("브라우저 초기화 실패");
     if (!this.loggingService) throw new Error("에러 로깅 서비스 초기화 실패");
     if (!this.xlsxService) throw new Error("xlsx 서비스 초기화 실패");
@@ -155,16 +156,20 @@ class NaraG2bService {
     await page.waitForNetworkIdle({ idleTime: 1000 });
     this.loggingService.logging("로딩 프로세스바 사라짐 확인");
 
-    try {
-      const isNotDeletedXPath = `//tr[td[@col_id='instDelYn']//nobr[text()='N']]`;
-      const organizationXPath = `/td[@col_id='grpNm']//a[contains(text(),'${organization}')]`;
+    const isNotDeletedXPath = `//tr[td[@col_id='instDelYn']//nobr[text()='N']]`;
+    const matchedXPath = `/td[@col_id='grpNm']//a[contains(text(),'${organization}') and contains(text(),'${region}')]`;
 
-      await page.locator(`::-p-xpath(${isNotDeletedXPath}${organizationXPath})`).click();
+    try {
+      await page.locator(`::-p-xpath(${isNotDeletedXPath}${matchedXPath})`).click();
       this.loggingService.logging("수요기관 선택 완료");
     } catch (error) {
       await this.xlsxService.addErrorRow({ query, organization, title: "", message: "수요기관 존재하지 않음" });
       throw new Error(`수요기관이 존재하지 않습니다`);
     }
+
+    const targetOrganization =
+      (await page.$eval(`::-p-xpath(${isNotDeletedXPath}${matchedXPath})`, (el) => el.textContent)) ?? organization;
+    this.loggingService.logging(`선택된 수요기관명: ${targetOrganization}`);
 
     const parsedStartDate = startDate.split("-").join("");
     const parsedEndDate = endDate.split("-").join("");
@@ -190,7 +195,12 @@ class NaraG2bService {
     this.loggingService.logging(`검색 결과: ${totalCnt}개`);
 
     if (totalCnt === 0) {
-      await this.xlsxService.addErrorRow({ query, organization, title: "", message: "검색 결과 없음" });
+      await this.xlsxService.addErrorRow({
+        query,
+        organization: targetOrganization,
+        title: "",
+        message: "검색 결과 없음",
+      });
       throw new Error("검색 결과가 0건입니다.");
     }
 
@@ -241,10 +251,20 @@ class NaraG2bService {
             const filePath = path.join(filesDir, `${i}-${j}-generated.pdf`);
             fs.writeFileSync(filePath, pdfBuffer);
             this.loggingService.logging("PDF 파일 다운 성공");
-            await this.xlsxService.addRow({ query, organization, title, fileLink: filePath });
+            await this.xlsxService.addRow({
+              query,
+              organization: targetOrganization,
+              title,
+              fileLink: filePath,
+            });
           } else {
             this.loggingService.logging("PDF 파일 다운 실패");
-            await this.xlsxService.addErrorRow({ query, organization, title, message: "파일 다운 실패" });
+            await this.xlsxService.addErrorRow({
+              query,
+              organization: targetOrganization,
+              title,
+              message: "파일 다운 실패",
+            });
           }
           this.loggingService.logging("엑셀에 데이터 기록 완료");
 
