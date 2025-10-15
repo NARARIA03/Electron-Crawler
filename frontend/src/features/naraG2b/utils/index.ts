@@ -21,8 +21,9 @@ export const parseExcelQuery = async (excelFile: File): Promise<NaraG2bDataFE[]>
             const rowData = {
               query: getCellValue(row, 1),
               organization: getCellValue(row, 2),
-              startDate: getCellValue(row, 3),
-              endDate: getCellValue(row, 4),
+              region: getCellValue(row, 3),
+              startDate: getCellValue(row, 4),
+              endDate: getCellValue(row, 5),
             };
             result.push(rowData);
           }
