@@ -23,8 +23,8 @@ type Params = {
 class NaraG2bService {
   private data: Params["data"];
   private excelName: Params["excelName"];
-  private baseDir: Params["baseDir"];
   private debug: Params["debug"];
+  private resultDir: string;
   private filesDir: string;
 
   private browser: Browser | null = null;
@@ -34,9 +34,10 @@ class NaraG2bService {
   constructor({ data, excelName, baseDir, debug }: Params) {
     this.data = data;
     this.excelName = excelName;
-    this.baseDir = baseDir;
     this.debug = debug;
-    this.filesDir = path.join(this.baseDir, "excel_database", this.excelName.split(".")[0], "files");
+    const pathName = this.excelName.split(".")[0].toLowerCase().replaceAll("query", "") || "result";
+    this.resultDir = path.join(baseDir, "excel_database", pathName);
+    this.filesDir = path.join(this.resultDir, "files");
 
     if (!fs.existsSync(this.filesDir)) {
       fs.mkdirSync(this.filesDir, { recursive: true });
@@ -77,8 +78,8 @@ class NaraG2bService {
         executablePath: this.getExecutablePath(),
       });
 
-      this.loggingService = new LoggingService(this.baseDir, this.excelName);
-      this.xlsxService = new XlsxService(this.baseDir, this.excelName);
+      this.loggingService = new LoggingService(this.resultDir);
+      this.xlsxService = new XlsxService(this.resultDir, this.excelName);
       this.loggingService.logging(`엑셀 파일 생성 완료: ${this.xlsxService.getFilePath()}`);
     } catch (err) {
       console.error(err);

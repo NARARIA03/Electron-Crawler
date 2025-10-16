@@ -3,23 +3,19 @@ import path from "node:path";
 
 class LoggingService {
   private logger: fs.WriteStream | null = null;
-  private readonly defaultDirName = "excel_database";
 
-  constructor(baseDir: string, excelName: string) {
-    const excelBaseName = excelName.split(".")[0];
-    const logDir = path.join(baseDir, this.defaultDirName, excelBaseName);
-
+  constructor(resultDir: string) {
     const today = new Date();
     const dateString = `${today.getFullYear()}_${String(today.getMonth() + 1).padStart(2, "0")}_${String(
       today.getDate()
     ).padStart(2, "0")}`;
 
     const logFileName = `${dateString}_logs.txt`;
-    const logFilePath = path.join(logDir, logFileName);
+    const logFilePath = path.join(resultDir, logFileName);
 
     try {
-      if (!fs.existsSync(logDir)) {
-        fs.mkdirSync(logDir, { recursive: true });
+      if (!fs.existsSync(resultDir)) {
+        fs.mkdirSync(resultDir, { recursive: true });
       }
       this.logger = fs.createWriteStream(logFilePath, { flags: "a" });
     } catch (error) {

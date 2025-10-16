@@ -21,20 +21,19 @@ export default class XlsxService {
   private wb: ExcelJS.Workbook;
   private ws: ExcelJS.Worksheet | null;
   private filePath: string;
-  private readonly defaultDirName = "excel_database";
   private readonly sheetName = "Sheet1";
 
   /**
    * @description Workbook과 변수를 초기화하는 생성자
    */
-  constructor(baseDir: string, excelName: string) {
-    const excelBaseName = excelName.split(".")[0];
-    const excelDir = path.join(baseDir, this.defaultDirName, excelBaseName);
-    if (!fs.existsSync(excelDir)) {
-      fs.mkdirSync(excelDir, { recursive: true });
+  constructor(resultDir: string, excelName: string) {
+    const resultExcelName = excelName.toLowerCase().replaceAll("query", "");
+
+    if (!fs.existsSync(resultDir)) {
+      fs.mkdirSync(resultDir, { recursive: true });
     }
 
-    this.filePath = path.join(excelDir, excelName);
+    this.filePath = path.join(resultDir, resultExcelName);
     this.wb = new ExcelJS.Workbook();
     this.ws = null;
   }
