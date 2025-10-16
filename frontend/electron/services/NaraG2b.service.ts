@@ -25,6 +25,7 @@ class NaraG2bService {
   private excelName: Params["excelName"];
   private baseDir: Params["baseDir"];
   private debug: Params["debug"];
+  private filesDir: string;
 
   private browser: Browser | null = null;
   private xlsxService: XlsxService | null = null;
@@ -35,6 +36,11 @@ class NaraG2bService {
     this.excelName = excelName;
     this.baseDir = baseDir;
     this.debug = debug;
+    this.filesDir = path.join(this.baseDir, "excel_database", this.excelName.split(".")[0], "files");
+
+    if (!fs.existsSync(this.filesDir)) {
+      fs.mkdirSync(this.filesDir, { recursive: true });
+    }
   }
 
   private getExecutablePath() {
@@ -214,9 +220,16 @@ class NaraG2bService {
       for (let j = 0; j < resultsCount; j++) {
         try {
           await page.waitForNetworkIdle({ idleTime: 1000 });
-
           await page.waitForSelector(`#mf_wfm_container_grdTotalSrch_${j}_bizNm`, { visible: true });
-          const title = await page.$eval(`label#mf_wfm_container_grdTotalSrch_${j}_bizNm`, (label) => label.innerText);
+
+          const titleSelector = `label#mf_wfm_container_grdTotalSrch_${j}_bizNm` as const;
+          const createdAtSelector = `label#mf_wfm_container_grdTotalSrch_${j}_bizYmd` as const;
+          const idSelector = `label#mf_wfm_container_grdTotalSrch_${j}_bizNo` as const;
+
+          const title = await page.$eval(titleSelector, (label) => label.innerText);
+          const createdAt = await page.$eval(createdAtSelector, ({ innerText }) => innerText);
+          const id = await page.$eval(idSelector, ({ innerText }) => innerText);
+
           await page.$eval(`label#mf_wfm_container_grdTotalSrch_${j}_bizNm`, (label) => label.click());
           this.loggingService.logging(`${i}페이지 ${j + 1}번째 결과 클릭 성공`);
 
@@ -242,19 +255,14 @@ class NaraG2bService {
           const base64Data = pdfSrc?.split(",")[1];
           if (base64Data) {
             const pdfBuffer = Buffer.from(base64Data, "base64");
-            const filesDir = path.join(this.baseDir, "excel_database", this.excelName.split(".")[0], "files");
-
-            if (!fs.existsSync(filesDir)) {
-              fs.mkdirSync(filesDir, { recursive: true });
-            }
-
-            const filePath = path.join(filesDir, `${i}-${j}-generated.pdf`);
+            const filePath = path.join(this.filesDir, `${encodeURIComponent(id)}.pdf`);
             fs.writeFileSync(filePath, pdfBuffer);
             this.loggingService.logging("PDF 파일 다운 성공");
             await this.xlsxService.addRow({
               query,
               organization: targetOrganization,
               title,
+              createdAt,
               fileLink: filePath,
             });
           } else {
