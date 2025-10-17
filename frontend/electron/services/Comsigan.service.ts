@@ -72,7 +72,9 @@ class ComsiganService {
           "--no-first-run",
           "--no-zygote",
           "--disable-gpu",
+          "--disable-features=HttpsFirstBalancedModeAutoEnable", // HTTPS 안 되는 사이트 접근 시 뜨는 경고 무시하는 flag
         ],
+        slowMo: 250,
         executablePath: this.getExecutablePath(),
       });
 
@@ -121,6 +123,21 @@ class ComsiganService {
     if (!this.browser) throw new Error("브라우저 초기화 실패");
     if (!this.loggingService) throw new Error("에러 로깅 서비스 초기화 실패");
     if (!this.xlsxService) throw new Error("xlsx 서비스 초기화 실패");
+
+    const page = await this.browser.newPage();
+
+    await page.setViewport({ width: 1080, height: 1024 });
+    await page.goto("http://xn--s39aj90b0nb2xw6xh.kr/");
+
+    await page.reload();
+
+    await this.delay(3000);
+
+    await page.locator('input[value="학교찾기"]').click();
+
+    await this.delay(3000);
+
+    await this.delay(10000);
   }
 }
 
