@@ -1,6 +1,5 @@
 import { BrowserWindow, shell } from "electron";
-import type { ComsiganCrawlData } from "electron/services/Comsigan.service";
-import ComsiganService from "electron/services/Comsigan.service";
+import ComsiganService, { type ComsiganCrawlData } from "electron/services/Comsigan.service";
 import path from "node:path";
 
 export type ComsiganTask = {
@@ -114,6 +113,9 @@ class ComsiganController {
     if (!task.baseDir) throw new Error("기본 저장 경로가 설정되지 않았습니다");
     if (!task.excelName || !task.data) throw new Error("엑셀을 정상적으로 인식하지 못했습니다");
 
+    const pathName = task.excelName.split(".")[0].toLowerCase().replaceAll("query", "") || "default-result-comsigan";
+    const outputDir = path.join(task.baseDir, "excel_database", pathName);
+
     try {
       this.updateTask(id, { status: "작업중" });
       const service = new ComsiganService({
@@ -124,24 +126,20 @@ class ComsiganController {
       });
       this.updateTask(id, { service });
       console.log(this.tasks.get(id));
-
       await service.crawl();
       this.updateTask(id, { status: "작업완료", service: undefined });
-
-      const outputDir = path.join(task.baseDir, "excel_database", task.excelName.split(".")[0]);
       shell.openPath(outputDir);
     } catch (error) {
       console.error(`Comsigan 크롤링 오류: ${error}`);
       this.updateTask(id, { status: "작업실패", service: undefined });
-      const failDir = path.join(task.baseDir, "excel_database", task.excelName.split(".")[0]);
-      shell.openPath(failDir);
+      shell.openPath(outputDir);
     }
   }
 
   private static notifyUpdate() {
     const allWindows = BrowserWindow.getAllWindows();
     allWindows.forEach((window) => {
-      window.webContents.send("naraG2b:notifyUpdate", this.getAllTasks());
+      window.webContents.send("comsigan:notifyUpdate", this.getAllTasks());
     });
   }
 }

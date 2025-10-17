@@ -1,12 +1,14 @@
 import puppeteer, { Browser } from "puppeteer";
+import path from "node:path";
+import fs from "node:fs";
 import LoggingService from "./Logging.service";
 import XlsxService from "./Xlsx.service";
+import { app } from "electron";
 
 export type ComsiganCrawlData = {
-  query: string; // 검색어 - 신발장
-  startDate: string;
-  endDate: string;
-  organization?: string; // 기관명 - 개운중학교
+  schoolName: string;
+  region: string;
+  teacherName: string;
 };
 
 type Params = {
@@ -19,8 +21,9 @@ type Params = {
 class ComsiganService {
   private data: Params["data"];
   private excelName: Params["excelName"];
-  private baseDir: Params["baseDir"];
   private debug: Params["debug"];
+  private resultDir: string;
+  private filesDir: string;
 
   private browser: Browser | null = null;
   private xlsxService: XlsxService | null = null;
@@ -29,27 +32,56 @@ class ComsiganService {
   constructor({ data, excelName, baseDir, debug }: Params) {
     this.data = data;
     this.excelName = excelName;
-    this.baseDir = baseDir;
     this.debug = debug;
+    const pathName = this.excelName.split(".")[0].toLowerCase().replaceAll("query", "") || "default-result-comsigan";
+    this.resultDir = path.join(baseDir, "excel_database", pathName);
+    this.filesDir = path.join(this.resultDir, "files");
+
+    if (!fs.existsSync(this.filesDir)) {
+      fs.mkdirSync(this.filesDir, { recursive: true });
+    }
+  }
+
+  private getExecutablePath() {
+    const chromePath = puppeteer.executablePath();
+
+    if (app.isPackaged) {
+      const idx = chromePath.indexOf(".cache");
+      if (idx !== -1) {
+        const relativePath = chromePath.substring(idx);
+        const packagedPath = path.join(process.resourcesPath, relativePath);
+        console.log("executablePath (packaged): ", packagedPath);
+        return packagedPath;
+      }
+    }
+
+    const unpackagedPath = chromePath.replace(/^(\.\.\/)+/, "");
+    console.log("executablePath (dev): ", unpackagedPath);
+    return unpackagedPath;
   }
 
   private async setUp() {
-    this.browser = await puppeteer.launch({
-      headless: !this.debug,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-accelerated-2d-canvas",
-        "--no-first-run",
-        "--no-zygote",
-        "--disable-gpu",
-      ],
-    });
+    try {
+      this.browser = await puppeteer.launch({
+        headless: !this.debug,
+        args: [
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-accelerated-2d-canvas",
+          "--no-first-run",
+          "--no-zygote",
+          "--disable-gpu",
+        ],
+        executablePath: this.getExecutablePath(),
+      });
 
-    this.loggingService = new LoggingService(this.baseDir, this.excelName);
-    this.xlsxService = new XlsxService(this.baseDir, this.excelName);
-    this.loggingService.logging(`엑셀 파일 생성 완료: ${this.xlsxService.getFilePath()}`);
+      this.loggingService = new LoggingService(this.resultDir);
+      this.xlsxService = new XlsxService(this.resultDir, this.excelName);
+      this.loggingService.logging(`엑셀 파일 생성 완료: ${this.xlsxService.getFilePath()}`);
+    } catch (err) {
+      console.error(err);
+    }
   }
 
   public async close() {
@@ -85,11 +117,10 @@ class ComsiganService {
     }
   }
 
-  private async query({ query, startDate, endDate, organization }: ComsiganCrawlData) {
+  private async query({ schoolName, region, teacherName }: ComsiganCrawlData) {
     if (!this.browser) throw new Error("브라우저 초기화 실패");
     if (!this.loggingService) throw new Error("에러 로깅 서비스 초기화 실패");
     if (!this.xlsxService) throw new Error("xlsx 서비스 초기화 실패");
-    if (!organization) throw new Error("organization이 비어있습니다");
   }
 }
 
