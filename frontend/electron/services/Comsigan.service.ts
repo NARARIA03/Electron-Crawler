@@ -139,9 +139,7 @@ class ComsiganService {
     this.loggingService.logging("학교명 입력 완료");
     await targetIFrame.locator('input[value="검색"]').click();
     this.loggingService.logging("검색 버튼 클릭 완료");
-
-    await page.waitForResponse((response) => response.url().includes("comci.net:4082") && response.status() === 200);
-    this.loggingService.logging("학교명 검색 API 200 확인");
+    await page.waitForNetworkIdle({ idleTime: 1000 });
 
     this.loggingService.logging("검색 결과에서 학교를 찾아 클릭 시도");
     const isSuccess = await targetIFrame.evaluate(
@@ -169,6 +167,72 @@ class ComsiganService {
 
     if (!isSuccess) throw new Error(`${region}-${schoolName} 검색 결과가 없습니다.`);
     this.loggingService.logging(`학교 선택 완료. 지역: ${region}, 학교명: ${schoolName}`);
+    await page.waitForNetworkIdle({ idleTime: 1000 });
+
+    const rawWeekOptions = await targetIFrame.$$eval("select#nal option", (options) =>
+      options.map((option) => {
+        const value = option.value;
+        const dateTexts = option.textContent?.match(/(\d{2})-(\d{2})-(\d{2})\s*~\s*(\d{2})-(\d{2})-(\d{2})/);
+        if (!dateTexts) throw new Error("날짜 형식이 변경되었을 가능성이 있습니다. 관리자에게 문의해주세요.");
+
+        const [, startYear, startMonth, startDay, endYear, endMonth, endDay] = dateTexts;
+        const startDate = new Date(2000 + parseInt(startYear), parseInt(startMonth) - 1, parseInt(startDay));
+        const endDate = new Date(2000 + parseInt(endYear), parseInt(endMonth) - 1, parseInt(endDay) - 1); // * 일자가 6일제로 되어있어서 -1일
+
+        return {
+          value,
+          text: option.textContent,
+          startTime: startDate.getTime(),
+          endTime: endDate.getTime(),
+        };
+      })
+    );
+
+    const weekOptions = rawWeekOptions.map(({ value, text, startTime, endTime }) => ({
+      value,
+      text,
+      startDate: new Date(startTime),
+      endDate: new Date(endTime),
+    }));
+
+    const MAX_ATTEMPTS = 30;
+    let attempts = 0;
+    let collectedDays = 0;
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+
+    while (collectedDays < 5 && attempts < MAX_ATTEMPTS) {
+      attempts++;
+      const year = currentDate.getFullYear();
+      const month = String(currentDate.getMonth() + 1).padStart(2, "0");
+      const day = String(currentDate.getDate()).padStart(2, "0");
+      const curDateStr = `${year}-${month}-${day}`;
+
+      this.loggingService.logging(`${curDateStr} 날짜 데이터 수집 시도 (${attempts}/${MAX_ATTEMPTS})`);
+
+      const matchedWeek = weekOptions.find(
+        ({ startDate, endDate }) => currentDate >= startDate && currentDate <= endDate
+      );
+
+      if (!matchedWeek) {
+        this.loggingService.logging(`${curDateStr}가 범위에 존재 X, 다음날로 이동`);
+        currentDate.setDate(currentDate.getDate() + 1);
+        continue;
+      }
+
+      this.loggingService.logging(`${curDateStr}가 범위에 존재 O, 범위에 해당하는 주간 선택 시도`);
+      await targetIFrame.select("select#nal", matchedWeek.value);
+      await page.waitForNetworkIdle({ idleTime: 1000 });
+
+      // TODO: 데이터 파싱
+      this.loggingService.logging(`데이터 파싱 예정 (${collectedDays + 1}/5일차)`);
+      // 수집 완료
+      collectedDays++;
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    if (collectedDays < 5) throw new Error(`${collectedDays}일치만 수집됨. ${MAX_ATTEMPTS}번 시도 후 종료`);
+    this.loggingService.logging("5일치 데이터 수집 완료");
 
     await this.delay(10000);
   }
