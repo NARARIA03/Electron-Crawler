@@ -63,6 +63,7 @@ class NaraG2bService {
   }
 
   private async setUp() {
+    console.log(this.debug);
     try {
       this.browser = await puppeteer.launch({
         headless: !this.debug,

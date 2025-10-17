@@ -7,7 +7,8 @@ export const setDownloadDirectory = (directory: string) => {
 };
 
 export const getDebugMode = () => {
-  return window.localStorage.getItem("debug");
+  const debug = window.localStorage.getItem("debug");
+  return debug ? JSON.parse(debug) : false;
 };
 
 export const setDebugMode = (debug: boolean) => {

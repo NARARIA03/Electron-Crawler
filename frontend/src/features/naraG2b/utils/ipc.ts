@@ -25,7 +25,7 @@ export const setTaskQueryIPC = (id: string, excelName: string | null, data: Nara
   return window.ipcRenderer.invoke("naraG2b:updateTask", id, { excelName, data });
 };
 
-export const initializeTaskIPC = (id: string, baseDir: string | null, debug: string | null) => {
+export const initializeTaskIPC = (id: string, baseDir: string | null, debug: boolean) => {
   return window.ipcRenderer.invoke("naraG2b:updateTask", id, { baseDir, debug });
 };
 
