@@ -117,6 +117,9 @@ class NaraG2bController {
     if (!task.baseDir) throw new Error("기본 저장 경로가 설정되지 않았습니다");
     if (!task.excelName || !task.data) throw new Error("엑셀을 정상적으로 인식하지 못했습니다");
 
+    const pathName = task.excelName.split(".")[0].toLowerCase().replaceAll("query", "") || "result";
+    const outputDir = path.join(task.baseDir, "excel_database", pathName);
+
     try {
       this.updateTask(id, { status: "작업중" });
 
@@ -134,15 +137,13 @@ class NaraG2bController {
       this.updateTask(id, { status: "작업완료", service: undefined });
 
       // 작업 완료 후 디렉토리 열기
-      const outputDir = path.join(task.baseDir, "excel_database", task.excelName.split(".")[0]);
       shell.openPath(outputDir);
     } catch (error) {
       console.error(`NaraG2B 크롤링 오류: ${error}`);
       this.updateTask(id, { status: "작업실패", service: undefined });
 
       // 실패한 경우에도 작업 디렉토리 열기
-      const failDir = path.join(task.baseDir, "excel_database", task.excelName.split(".")[0]);
-      shell.openPath(failDir);
+      shell.openPath(outputDir);
     }
   }
 
