@@ -47,7 +47,7 @@ class NaraG2bController {
   };
 
   /** DELETE */
-  public static cancelTask(id: string) {
+  public static async cancelTask(id: string) {
     const task = this.tasks.get(id);
     if (!task) return false;
 
@@ -64,8 +64,7 @@ class NaraG2bController {
 
     // 실행 중 작업 -> 실행 종료, 태스크 리스트에는 유지, 취소됨 상태로 변경
     if (task.service) {
-      task.service.close();
-
+      await task.service.close();
       this.updateTask(id, { status: "취소됨", service: undefined });
       return true;
     }
