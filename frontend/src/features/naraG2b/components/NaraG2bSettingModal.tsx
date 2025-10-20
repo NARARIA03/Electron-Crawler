@@ -14,7 +14,7 @@ type Props = {
 
 const NaraG2bSettingModal = ({ isOpen, onClose }: Props) => {
   const [downloadDir, setDownloadDir] = useState<string | null>(() => getDownloadDirectory());
-  const [debug, setDebug] = useState<string | null>(() => getDebugMode());
+  const [debug, setDebug] = useState<boolean>(() => getDebugMode());
 
   const handleDownloadDirChange = async () => {
     try {
@@ -32,7 +32,7 @@ const NaraG2bSettingModal = ({ isOpen, onClose }: Props) => {
   };
 
   const handleDebugCheckedChange = (checked: boolean) => {
-    setDebug(JSON.stringify(checked));
+    setDebug(checked);
     updateTaskAllIPC({ debug: checked });
     setDebugMode(checked);
   };
@@ -80,7 +80,7 @@ const NaraG2bSettingModal = ({ isOpen, onClose }: Props) => {
           </div>
           <div className="mb-8 pb-4">
             <p className="text-zinc-600 mb-2 select-none">디버깅 모드:</p>
-            <Switch checked={debug === "true"} onCheckedChange={handleDebugCheckedChange} />
+            <Switch checked={debug} onCheckedChange={handleDebugCheckedChange} />
           </div>
         </div>
       </div>

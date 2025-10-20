@@ -63,7 +63,6 @@ class NaraG2bService {
   }
 
   private async setUp() {
-    console.log(this.debug);
     try {
       this.browser = await puppeteer.launch({
         headless: !this.debug,
@@ -82,6 +81,7 @@ class NaraG2bService {
       this.loggingService = new LoggingService(this.resultDir);
       this.xlsxService = new XlsxService(this.resultDir, this.excelName);
       this.loggingService.logging(`엑셀 파일 생성 완료: ${this.xlsxService.getFilePath()}`);
+      this.loggingService.logging(`Debug: ${this.debug}`);
     } catch (err) {
       console.error(err);
     }
