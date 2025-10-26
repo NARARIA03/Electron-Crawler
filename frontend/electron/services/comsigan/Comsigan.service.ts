@@ -2,8 +2,8 @@ import puppeteer, { Browser } from "puppeteer";
 import { app } from "electron";
 import path from "node:path";
 import fs from "node:fs";
-import LoggingService from "../Logging.service";
 import XlsxService from "./Xlsx.service";
+import LoggingService from "../Logging.service";
 
 export type ComsiganCrawlData = {
   schoolName: string;

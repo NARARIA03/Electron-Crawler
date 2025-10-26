@@ -1,5 +1,5 @@
 import { BrowserWindow, shell } from "electron";
-import ComsiganService, { type ComsiganCrawlData } from "electron/services/comsigan/Comsigan.service";
+import ComsiganService, { type ComsiganCrawlData } from "../../services/comsigan/Comsigan.service";
 import path from "node:path";
 
 export type ComsiganTask = {
