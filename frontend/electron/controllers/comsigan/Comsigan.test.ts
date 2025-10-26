@@ -36,7 +36,7 @@ test("Comsigan 개발용 테스트", async () => {
 
   const task: ComsiganTask = {
     id,
-    data: [{ schoolName: "수락중", region: "서울", teacherName: "신윤" }],
+    data: [{ schoolName: "휘봉고", region: "서울", teacherName: "이수" }],
     excelName: "QUERY컴시간테스트.xlsx",
     baseDir,
     status: "예약완료",
