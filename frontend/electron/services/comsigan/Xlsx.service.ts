@@ -8,6 +8,7 @@ type TBaseParams = {
   teacherName: string;
   date: string;
   time: string;
+  grade: number;
   subject: string;
 };
 
@@ -37,7 +38,7 @@ export default class XlsxService {
    */
   private createWorksheet() {
     const ws = this.wb.addWorksheet(this.baseSheet, { pageSetup: { fitToPage: true } });
-    ws.addRow(["지역", "학교명", "교사명", "날짜", "수업 시간", "과목"]);
+    ws.addRow(["지역", "학교명", "교사명", "날짜", "수업 시간", "학년", "과목"]);
     return ws;
   }
 
@@ -60,9 +61,9 @@ export default class XlsxService {
    * @description 정상 데이터 수집 후, 행을 추가하는 메서드
    * @note `Promise.all` 등으로 race condition을 유발하지 마세요.
    */
-  public async addRow({ region, schoolName, teacherName, date, time, subject }: TBaseParams) {
+  public async addRow({ region, schoolName, teacherName, date, time, grade, subject }: TBaseParams) {
     const ws = await this.getWorksheet();
-    ws.addRow([region, schoolName, teacherName, date, time, subject]);
+    ws.addRow([region, schoolName, teacherName, date, time, grade, subject]);
     await this.save();
   }
 
@@ -102,4 +103,9 @@ export default class XlsxService {
   public getFilePath(): string {
     return this.filePath;
   }
+
+  /**
+   * @description 데이터를 테이블 형태로 재구축하는 메서드
+   */
+  public createTableView() {}
 }

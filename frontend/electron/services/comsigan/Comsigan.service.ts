@@ -18,13 +18,6 @@ type Params = {
   debug: boolean;
 };
 
-type TScheduleData = {
-  date: string;
-  time: string;
-  subject: string;
-  teacherName: string;
-};
-
 class ComsiganService {
   private data: Params["data"];
   private excelName: Params["excelName"];
@@ -202,8 +195,6 @@ class ComsiganService {
       endDate: new Date(endTime),
     }));
 
-    const scheduleData: TScheduleData[] = [];
-
     for (let grade = 1; grade <= 3; grade++) {
       const MAX_ATTEMPTS = 30;
       let attempts = 0;
@@ -244,66 +235,37 @@ class ComsiganService {
         this.loggingService.logging(`${["일", "월", "화", "수", "목", "금", "토"][dayOfWeek]}요일 선택`);
         await this.delay(1000);
 
+        // 시간표 날짜 정보 크롤링
+        const date = await targetIFrame.$eval(
+          "#hour2 table tbody tr td.내용2[colspan]",
+          (td) => td.textContent?.split(" ").pop() ?? ""
+        );
+
         // 요일에 해당하는 시간표 크롤링
-        const daySchedule = await targetIFrame.evaluate((teacher: string) => {
-          const schedules = [];
-          const rows = document.querySelectorAll("#hour2 table tbody tr");
+        const rows = await targetIFrame.$$("#hour2 table tbody tr");
+        for (const row of rows) {
+          const cells = await row.$$("td");
+          if (cells.length === 0) continue;
 
-          // date 정보 추출: "제 2 학년 시간표 금(31일)" -> "금(31일)"
-          const dateCell = document.querySelector("#hour2 table tbody tr td.내용2[colspan]");
-          const date = dateCell?.textContent?.split(" ").pop() ?? "";
+          // 수업 시간 크롤링
+          const time = await cells[0].evaluate((el) => el.textContent.trim() ?? "");
 
-          for (let i = 0; i < rows.length; i++) {
-            const row = rows[i];
-            const cells = row.querySelectorAll("td");
-
-            // 교시(시간) 추출
-            const timeCell = cells[0];
-            if (!timeCell?.classList.contains("교시")) continue;
-            const time = timeCell.textContent?.trim() ?? "";
-
-            // 교사명을 찾아서 과목명과 함께 저장
-            for (let j = 1; j < cells.length; j++) {
-              const cellText = cells[j].innerHTML;
-              const [subject, teacherName] = cellText.split("<br>");
-              if (teacherName === teacher) {
-                this.loggingService?.logging(`${teacherName}-${subject} 일정 수집 완료`);
-                schedules.push({
-                  date,
-                  time,
-                  subject,
-                  teacherName,
-                });
-              }
+          // 교사 시간표 크롤링
+          for (const cell of cells) {
+            const rawHtml = await cell.evaluate((el) => el.innerHTML);
+            const [subject, name] = rawHtml.split("<br>");
+            if (name === teacherName) {
+              this.loggingService.logging(`${teacherName}-${subject} 일정 수집`);
+              await this.xlsxService.addRow({ region, schoolName, teacherName, date, time, grade, subject });
             }
           }
-          return schedules;
-        }, teacherName);
-
-        if (daySchedule.length > 0) {
-          this.loggingService.logging(
-            `수집 완료 데이터: \n${daySchedule.map(
-              (scheduleData) =>
-                `${scheduleData.date}-${scheduleData.time}-${scheduleData.subject}-${scheduleData.teacherName}\n`
-            )}`
-          );
-          daySchedule.forEach((schedule) => scheduleData.push(schedule));
-        } else {
-          this.loggingService.logging(`${targetDateStr}에 ${teacherName} 선생님 시간표 없음`);
         }
 
+        // 다음 날짜 수집 준비
         collectedDays++;
         targetDate.setDate(targetDate.getDate() + 1);
       }
     }
-
-    // 엑셀에 데이터 저장
-    if (scheduleData.length > 0) {
-      this.loggingService.logging(`엑셀에 ${scheduleData.length}개 시간표 데이터 저장`);
-      scheduleData.forEach((data) => this.xlsxService?.addRow({ region, schoolName, ...data }));
-    }
-
-    await this.delay(10000);
   }
 }
 
