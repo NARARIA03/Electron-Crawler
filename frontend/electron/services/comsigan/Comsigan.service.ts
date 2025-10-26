@@ -116,6 +116,7 @@ class ComsiganService {
         await this.close();
       }
     }
+    await this.xlsxService?.createTableView();
   }
 
   private async query({ schoolName, region, teacherName }: ComsiganCrawlData) {
