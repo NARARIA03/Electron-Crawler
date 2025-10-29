@@ -1,16 +1,16 @@
 import ExcelJS from "exceljs";
 import fs from "node:fs";
 import path from "node:path";
-
-type TBaseParams = {
-  region: string;
-  schoolName: string;
-  teacherName: string;
-  date: string;
-  time: string;
-  grade: number;
-  subject: string;
-};
+import { autoFitColumns } from "../../utils/autoFitColumns";
+import {
+  createClassListMap,
+  createDateMap,
+  createGradeColumnIndexMap,
+  createSchoolMap,
+  getMaxClassCountPerGrade,
+  parseXlsxData,
+} from "../../utils/comsigan/dataParser";
+import type { TBaseParams } from "../../types/comsigan";
 
 export default class XlsxService {
   private wb: ExcelJS.Workbook;
@@ -68,32 +68,11 @@ export default class XlsxService {
   }
 
   /**
-   * @description 저장 전 셀의 width를 맞추는 메서드
-   */
-  private async autoFitColumns() {
-    const colWidths: number[] = [];
-    const ws = await this.getWorksheet();
-
-    ws.eachRow((row) => {
-      row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-        const cellValue = cell.value ? String(cell.value) : "";
-        let cellWidth = 0;
-
-        for (const char of cellValue) {
-          cellWidth += /[\u3131-\uD79D]/.test(char) ? 2 : 1;
-        }
-        colWidths[colNumber - 1] = Math.max(colWidths[colNumber - 1] || 10, cellWidth + 2);
-      });
-    });
-
-    ws.columns = colWidths.map((width) => ({ width }));
-  }
-
-  /**
    * @description xlsx 파일에 데이터를 저장하는 메서드
    */
   public async save() {
-    await this.autoFitColumns();
+    const ws = await this.getWorksheet();
+    autoFitColumns(ws);
     await this.wb.xlsx.writeFile(this.filePath);
   }
 
@@ -105,147 +84,61 @@ export default class XlsxService {
   }
 
   /**
-   * @description 데이터를 테이블 형태로 재구축하는 메서드
+   * @description 데이터를 학교별 테이블 형태로 재구축하는 메서드
    */
   public async createTableView() {
     const ws = await this.getWorksheet();
-    const rawData: Array<{
-      region: string;
-      school: string;
-      teacher: string;
-      date: string;
-      time: string;
-      grade: number;
-      subject: string;
-    }> = [];
+    const rawData = parseXlsxData(ws);
+    const schoolGroupMap = createSchoolMap(rawData);
 
-    // 원본 데이터 읽기
-    ws.eachRow((row, rowNum) => {
-      if (rowNum > 1) {
-        const v = row.values as (string | number)[];
-        rawData.push({
-          region: String(v[1] || ""),
-          school: String(v[2] || ""),
-          teacher: String(v[3] || ""),
-          date: String(v[4] || ""),
-          time: String(v[5] || ""),
-          grade: Number(v[6] || 0),
-          subject: String(v[7] || ""),
-        });
-      }
-    });
-
-    // 학교별로 그룹핑
-    const schoolGroups = new Map<string, typeof rawData>();
-    rawData.forEach((data) => {
-      if (!schoolGroups.has(data.school)) {
-        schoolGroups.set(data.school, []);
-      }
-      schoolGroups.get(data.school)!.push(data);
-    });
-
-    // 각 학교별로 시트 생성
-    for (const [schoolName, schoolData] of schoolGroups) {
+    for (const [schoolName, schoolData] of schoolGroupMap) {
       await this.createSchoolSheet(schoolName, schoolData);
     }
+
+    await this.save();
   }
 
   /**
    * @description 학교별 시트를 생성하는 메서드
    */
-  private async createSchoolSheet(
-    schoolName: string,
-    data: Array<{
-      region: string;
-      school: string;
-      teacher: string;
-      date: string;
-      time: string;
-      grade: number;
-      subject: string;
-    }>
-  ) {
-    // 기존 시트 삭제 (있으면)
+  private async createSchoolSheet(schoolName: string, data: TBaseParams[]) {
     const existingSheet = this.wb.getWorksheet(schoolName);
     if (existingSheet) {
       this.wb.removeWorksheet(existingSheet.id);
     }
 
-    const sheet = this.wb.addWorksheet(schoolName, { pageSetup: { fitToPage: true } });
-
-    // 날짜별로 그룹핑
-    const dateGroups = new Map<string, typeof data>();
-    data.forEach((d) => {
-      if (!dateGroups.has(d.date)) {
-        dateGroups.set(d.date, []);
-      }
-      dateGroups.get(d.date)!.push(d);
-    });
-
-    // 날짜 정렬 (월, 화, 수, 목, 금 순서)
-    const sortedDates = Array.from(dateGroups.keys()).sort((a, b) => {
-      const dayOrder = ["월", "화", "수", "목", "금", "토", "일"];
-      const dayA = a.match(/([월화수목금토일])/)?.[1] || "";
-      const dayB = b.match(/([월화수목금토일])/)?.[1] || "";
-      return dayOrder.indexOf(dayA) - dayOrder.indexOf(dayB);
-    });
-
     // 교시 목록 정의
     // Todo: 크롤링 과정에서 해당 학교의 전체 교시 정보를 크롤링해둬야 할 것으로 보인다.
     const allTimes = ["1(08:20)", "2(09:20)", "3(10:20)", "4(11:20)", "5(13:10)", "6(14:10)", "7(15:10)", "8(16:10)"];
 
-    // 학년-날짜-시간별로 수업 데이터 그룹핑
-    type ClassInfo = { teacher: string; subject: string };
-    const scheduleMap = new Map<string, ClassInfo[]>();
+    const sheet = this.wb.addWorksheet(schoolName, { pageSetup: { fitToPage: true } });
+    const dateGroupMap = createDateMap(data);
+    const classListMap = createClassListMap(data);
+    const gradeColumnIndexMap = createGradeColumnIndexMap(data);
 
-    data.forEach((d) => {
-      const key = `${d.grade}|${d.date}|${d.time}`;
-      if (!scheduleMap.has(key)) {
-        scheduleMap.set(key, []);
-      }
-      scheduleMap.get(key)!.push({ teacher: d.teacher, subject: d.subject });
-    });
-
-    // 각 학년별 최대 동시 수업 개수 계산
-    const maxClassesPerGrade = new Map<number, number>();
+    // * 헤더 세팅
+    sheet.getCell(1, 1).value = "날짜";
+    sheet.getCell(1, 2).value = "교시";
     [1, 2, 3].forEach((grade) => {
-      let max = 1;
-      scheduleMap.forEach((classes, key) => {
-        if (key.startsWith(`${grade}|`)) {
-          max = Math.max(max, classes.length);
+      const maxClassCount = getMaxClassCountPerGrade(grade, data);
+      const startIndex = gradeColumnIndexMap.get(grade);
+
+      if (startIndex) {
+        if (maxClassCount === 1) {
+          sheet.getCell(1, startIndex).value = `${grade}학년`;
+        } else {
+          const endIndex = startIndex + maxClassCount - 1;
+          sheet.mergeCells(1, startIndex, 1, endIndex);
+          sheet.getCell(1, startIndex).value = `${grade}학년`;
         }
-      });
-      maxClassesPerGrade.set(grade, max);
-    });
-
-    // 헤더 생성
-    let currentCol = 1;
-    const gradeColStart = new Map<number, number>();
-
-    // 날짜, 교시 헤더
-    sheet.getCell(1, currentCol++).value = "날짜";
-    sheet.getCell(1, currentCol++).value = "교시";
-
-    // 학년 헤더
-    [1, 2, 3].forEach((grade) => {
-      const maxClasses = maxClassesPerGrade.get(grade)!;
-      gradeColStart.set(grade, currentCol);
-
-      if (maxClasses === 1) {
-        sheet.getCell(1, currentCol).value = `${grade}학년`;
-        currentCol++;
-      } else {
-        // 여러 컬럼이 필요한 경우 병합
-        const endCol = currentCol + maxClasses - 1;
-        sheet.mergeCells(1, currentCol, 1, endCol);
-        sheet.getCell(1, currentCol).value = `${grade}학년`;
-        currentCol = endCol + 1;
       }
     });
+
+    // ! 여기까지 리팩토링 진행 완료한 상황
 
     // 데이터 행 생성
     let currentRow = 2;
-    sortedDates.forEach((date) => {
+    Array.from(dateGroupMap.keys()).forEach((date) => {
       const dateStartRow = currentRow;
 
       allTimes.forEach((time) => {
@@ -260,33 +153,35 @@ export default class XlsxService {
         // 각 학년별 데이터 채우기
         [1, 2, 3].forEach((grade) => {
           const key = `${grade}|${date}|${time}`;
-          const classes = scheduleMap.get(key) || [];
-          const startCol = gradeColStart.get(grade)!;
-          const maxClasses = maxClassesPerGrade.get(grade)!;
+          const classList = classListMap.get(key) || [];
+          const startIndex = gradeColumnIndexMap.get(grade);
+          const maxClassCount = getMaxClassCountPerGrade(grade, data);
 
-          // 모든 컬럼에 대해 처리 (병합 없이 개별 셀로 유지)
-          for (let i = 0; i < maxClasses; i++) {
-            const col = startCol + i;
-            const cell = sheet.getCell(currentRow, col);
+          if (startIndex) {
+            // 모든 컬럼에 대해 처리 (병합 없이 개별 셀로 유지)
+            for (let i = 0; i < maxClassCount; i++) {
+              const col = startIndex + i;
+              const cell = sheet.getCell(currentRow, col);
 
-            if (i < classes.length) {
-              // 수업 데이터 채우기
-              const classInfo = classes[i];
-              cell.value = `${classInfo.subject}\n${classInfo.teacher}`;
-              cell.alignment = { wrapText: true, vertical: "middle", horizontal: "center" };
-            } else {
-              // 빈 셀 (수업 없음)
-              cell.value = "";
-              cell.alignment = { vertical: "middle", horizontal: "center" };
+              if (i < classList.length) {
+                // 수업 데이터 채우기
+                const classInfo = classList[i];
+                cell.value = `${classInfo.subject}\n${classInfo.teacherName}`;
+                cell.alignment = { wrapText: true, vertical: "middle", horizontal: "center" };
+              } else {
+                // 빈 셀 (수업 없음)
+                cell.value = "";
+                cell.alignment = { vertical: "middle", horizontal: "center" };
+              }
+
+              // 모든 셀에 border 적용
+              cell.border = {
+                top: { style: "thin" },
+                left: { style: "thin" },
+                bottom: { style: "thin" },
+                right: { style: "thin" },
+              };
             }
-
-            // 모든 셀에 border 적용
-            cell.border = {
-              top: { style: "thin" },
-              left: { style: "thin" },
-              bottom: { style: "thin" },
-              right: { style: "thin" },
-            };
           }
         });
 
