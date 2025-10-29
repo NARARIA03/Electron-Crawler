@@ -1,3 +1,4 @@
+import { autoFitColumns } from "electron/utils/autoFitColumns";
 import ExcelJS from "exceljs";
 import fs from "fs";
 import path from "path";
@@ -92,32 +93,11 @@ export default class XlsxService {
   }
 
   /**
-   * @description 저장 전 셀의 width를 맞추는 메서드
-   */
-  private async autoFitColumns() {
-    const colWidths: number[] = [];
-    const ws = await this.getWorksheet();
-
-    ws.eachRow((row) => {
-      row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-        const cellValue = cell.value ? String(cell.value) : "";
-        let cellWidth = 0;
-
-        for (const char of cellValue) {
-          cellWidth += /[\u3131-\uD79D]/.test(char) ? 2 : 1;
-        }
-        colWidths[colNumber - 1] = Math.max(colWidths[colNumber - 1] || 10, cellWidth + 2);
-      });
-    });
-
-    ws.columns = colWidths.map((width) => ({ width }));
-  }
-
-  /**
    * @description xlsx 파일에 데이터를 저장하는 메서드
    */
   public async save() {
-    await this.autoFitColumns();
+    const ws = await this.getWorksheet();
+    autoFitColumns(ws);
     await this.wb.xlsx.writeFile(this.filePath);
   }
 
