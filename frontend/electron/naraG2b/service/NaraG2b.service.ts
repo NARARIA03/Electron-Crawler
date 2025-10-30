@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "node:path";
 import { app } from "electron";
 import puppeteer, { Browser } from "puppeteer";
-import LoggingService from "../Logging.service";
+import LoggingService from "../../shared/services/Logging.service";
 import XlsxService from "./Xlsx.service";
 
 export type NaraG2bCrawlData = {

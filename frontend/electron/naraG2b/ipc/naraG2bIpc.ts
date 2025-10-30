@@ -1,5 +1,5 @@
 import { ipcMain } from "electron";
-import NaraG2bController, { type NaraG2bTask } from "../controllers/naraG2b/NaraG2b.controller";
+import NaraG2bController, { type NaraG2bTask } from "../controller/NaraG2b.controller";
 
 export const naraG2bIpc = () => {
   /** READ */

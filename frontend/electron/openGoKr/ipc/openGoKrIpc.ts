@@ -1,5 +1,5 @@
 import { ipcMain } from "electron";
-import OpenGoKrController, { type OpenGoKrTask } from "../controllers/OpenGoKr.controller";
+import OpenGoKrController, { type OpenGoKrTask } from "../controller/OpenGoKr.controller";
 
 export const openGoKrIpc = () => {
   /** READ */

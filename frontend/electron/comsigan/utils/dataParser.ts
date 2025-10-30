@@ -1,5 +1,5 @@
 import type { Worksheet } from "exceljs";
-import type { TBaseParams, TClassInfo } from "../../types/comsigan";
+import type { TBaseParams, TClassInfo } from "../types";
 
 /**
  * @description 엑셀에 취합한 데이터를 배열로 변환해 반환하는 함수

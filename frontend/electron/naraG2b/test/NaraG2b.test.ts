@@ -1,6 +1,6 @@
 import { beforeEach, afterEach, test, vi, expect } from "vitest";
 import ExcelJS from "exceljs";
-import NaraG2bController, { NaraG2bTask } from "./NaraG2b.controller";
+import NaraG2bController, { NaraG2bTask } from "../controller/NaraG2b.controller";
 import path from "node:path";
 import fs from "node:fs";
 

@@ -3,7 +3,7 @@ import { app } from "electron";
 import path from "node:path";
 import fs from "node:fs";
 import XlsxService from "./Xlsx.service";
-import LoggingService from "../Logging.service";
+import LoggingService from "../../shared/services/Logging.service";
 
 export type ComsiganCrawlData = {
   schoolName: string;

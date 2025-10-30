@@ -1,7 +1,9 @@
 import { app, BrowserWindow } from "electron";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
-import { downloadDirIpc, downloadQueryExcel, naraG2bIpc, openFinderIpc, openGoKrIpc, preventPowerSave } from "./ipcs";
+import { downloadDirIpc, downloadQueryExcel, openFinderIpc, preventPowerSave } from "./ipcs";
+import { openGoKrIpc } from "./openGoKr";
+import { naraG2bIpc } from "./naraG2b";
 
 // const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

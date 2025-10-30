@@ -1,7 +1,7 @@
 import ExcelJS from "exceljs";
 import fs from "node:fs";
 import path from "node:path";
-import { autoFitColumns } from "../../utils/autoFitColumns";
+import { autoFitColumns } from "../../shared/utils/autoFitColumns";
 import {
   createClassListMap,
   createDateMap,
@@ -9,8 +9,8 @@ import {
   createSchoolMap,
   getMaxClassCountPerGrade,
   parseXlsxData,
-} from "../../utils/comsigan/dataParser";
-import type { TBaseParams } from "../../types/comsigan";
+} from "../utils/dataParser";
+import type { TBaseParams } from "../types";
 
 export default class XlsxService {
   private wb: ExcelJS.Workbook;

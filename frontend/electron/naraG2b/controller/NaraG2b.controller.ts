@@ -1,5 +1,5 @@
 import { BrowserWindow, shell } from "electron";
-import NaraG2bService, { type NaraG2bCrawlData } from "../../services/naraG2b/NaraG2b.service";
+import NaraG2bService, { type NaraG2bCrawlData } from "../service/NaraG2b.service";
 import path from "node:path";
 
 export type NaraG2bTask = {

@@ -2,8 +2,7 @@ import { test, vi } from "vitest";
 import path from "node:path";
 import fs from "node:fs";
 import { afterEach, beforeEach } from "node:test";
-import type { ComsiganTask } from "./Comsigan.controller";
-import ComsiganController from "./Comsigan.controller";
+import ComsiganController, { type ComsiganTask } from "../controller/Comsigan.controller";
 
 const DIR_NAME = "test-output";
 
