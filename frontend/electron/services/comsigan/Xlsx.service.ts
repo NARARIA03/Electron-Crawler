@@ -116,7 +116,7 @@ export default class XlsxService {
     const classListMap = createClassListMap(data);
     const gradeColumnIndexMap = createGradeColumnIndexMap(data);
 
-    // * 헤더 세팅
+    // 헤더 세팅
     sheet.getCell(1, 1).value = "날짜";
     sheet.getCell(1, 2).value = "교시";
     [1, 2, 3].forEach((grade) => {
@@ -134,68 +134,53 @@ export default class XlsxService {
       }
     });
 
-    // ! 여기까지 리팩토링 진행 완료한 상황
-
     // 데이터 행 생성
     let currentRow = 2;
-    Array.from(dateGroupMap.keys()).forEach((date) => {
+    [...dateGroupMap.keys()].forEach((date) => {
       const dateStartRow = currentRow;
 
-      allTimes.forEach((time) => {
-        // 날짜 컬럼 (첫 교시에만 쓰고 나중에 병합)
-        if (time === allTimes[0]) {
-          sheet.getCell(currentRow, 1).value = date;
+      allTimes.forEach((time, timeIndex) => {
+        if (timeIndex === 0) {
+          sheet.getCell(currentRow, 1).value = date; // 날짜 col
         }
+        sheet.getCell(currentRow, 2).value = time; // 교시 col
 
-        // 교시 컬럼
-        sheet.getCell(currentRow, 2).value = time;
-
-        // 각 학년별 데이터 채우기
+        // 특정 교시부터 각 학년별 데이터 채우기
         [1, 2, 3].forEach((grade) => {
           const key = `${grade}|${date}|${time}`;
-          const classList = classListMap.get(key) || [];
+          const classList = classListMap.get(key) || []; // 특정 교시 특정 학년의 수업 데이터 리스트
           const startIndex = gradeColumnIndexMap.get(grade);
-          const maxClassCount = getMaxClassCountPerGrade(grade, data);
+          const maxClassCount = getMaxClassCountPerGrade(grade, data); // 특정 교시 특정 학년 별 최대 수업 수
 
           if (startIndex) {
-            // 모든 컬럼에 대해 처리 (병합 없이 개별 셀로 유지)
+            // 특정 교시의 특정 학년 수업 데이터 삽입
             for (let i = 0; i < maxClassCount; i++) {
               const col = startIndex + i;
               const cell = sheet.getCell(currentRow, col);
+              const hasClass = i < classList.length; // 현재 순회하는 index가 수업 수를 넘었는지 (즉, 수업이 없는지) 체크
 
-              if (i < classList.length) {
-                // 수업 데이터 채우기
-                const classInfo = classList[i];
-                cell.value = `${classInfo.subject}\n${classInfo.teacherName}`;
+              if (hasClass) {
+                const { subject, teacherName } = classList[i];
+                cell.value = `${subject}\n${teacherName}`;
                 cell.alignment = { wrapText: true, vertical: "middle", horizontal: "center" };
               } else {
-                // 빈 셀 (수업 없음)
                 cell.value = "";
                 cell.alignment = { vertical: "middle", horizontal: "center" };
               }
-
-              // 모든 셀에 border 적용
-              cell.border = {
-                top: { style: "thin" },
-                left: { style: "thin" },
-                bottom: { style: "thin" },
-                right: { style: "thin" },
-              };
             }
           }
         });
-
         currentRow++;
       });
 
-      // 날짜 셀 병합 (세로)
+      // 월(27일)과 같은 날짜 셀 병합 (143 line 참고)
       if (allTimes.length > 1) {
         sheet.mergeCells(dateStartRow, 1, currentRow - 1, 1);
         sheet.getCell(dateStartRow, 1).alignment = { vertical: "middle", horizontal: "center" };
       }
     });
 
-    // 스타일 적용
+    // 테이블 스타일링
     this.applyTableStyle(sheet, currentRow - 1);
   }
 
@@ -243,6 +228,19 @@ export default class XlsxService {
         bottom: { style: "thin" },
         right: { style: "thin" },
       };
+    }
+
+    // 수업 정보 영역에 border 추가
+    for (let rowNum = 2; rowNum <= rowCount; rowNum++) {
+      const row = sheet.getRow(rowNum);
+      row.eachCell({ includeEmpty: true }, (cell) => {
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" },
+        };
+      });
     }
 
     // 컬럼 너비 자동 조정
