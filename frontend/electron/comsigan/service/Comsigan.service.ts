@@ -249,7 +249,7 @@ class ComsiganService {
           if (cells.length === 0) continue;
 
           // 수업 시간 크롤링
-          const time = await cells[0].evaluate((el) => el.textContent.trim() ?? "");
+          const time = await cells[0].evaluate((el) => el.textContent?.trim() ?? "");
 
           // 교사 시간표 크롤링
           for (const cell of cells) {
