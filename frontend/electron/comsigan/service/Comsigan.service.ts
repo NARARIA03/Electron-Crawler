@@ -28,6 +28,7 @@ class ComsiganService {
   private browser: Browser | null = null;
   private xlsxService: XlsxService | null = null;
   private loggingService: LoggingService | null = null;
+  private schoolTimesMap: Map<string, string[]> = new Map();
 
   constructor({ data, excelName, baseDir, debug }: Params) {
     this.data = data;
@@ -60,7 +61,7 @@ class ComsiganService {
     return unpackagedPath;
   }
 
-  private async setUp() {
+  private async setupPuppeteer() {
     try {
       this.browser = await puppeteer.launch({
         headless: !this.debug,
@@ -76,13 +77,24 @@ class ComsiganService {
         ],
         executablePath: this.getExecutablePath(),
       });
+    } catch (e) {
+      console.error(e);
+    }
+  }
 
+  private setupServices() {
+    try {
       this.loggingService = new LoggingService(this.resultDir);
       this.xlsxService = new XlsxService(this.resultDir, this.excelName);
-      this.loggingService.logging(`엑셀 파일 생성 완료: ${this.xlsxService.getFilePath()}`);
-    } catch (err) {
-      console.error(err);
+      this.loggingService.logging(`엑셀 파일 로드 완료: ${this.xlsxService.getFilePath()}`);
+    } catch (e) {
+      console.error(e);
     }
+  }
+
+  private async setup() {
+    await this.setupPuppeteer();
+    this.setupServices();
   }
 
   public async close() {
@@ -98,7 +110,7 @@ class ComsiganService {
       await this.xlsxService.save();
       this.xlsxService = null;
     }
-    await this.delay(5000);
+    await this.delay(3000);
   }
 
   private async delay(ms: number) {
@@ -108,15 +120,24 @@ class ComsiganService {
   public async crawl() {
     for (const crawlData of this.data) {
       try {
-        await this.setUp();
+        await this.setup();
         await this.query(crawlData);
-      } catch (error) {
-        this.loggingService?.errorLogging("크롤링 중 에러 발생", error);
+      } catch (e) {
+        this.loggingService?.errorLogging("크롤링 중 에러 발생", e);
       } finally {
         await this.close();
       }
     }
-    await this.xlsxService?.createTableView();
+
+    try {
+      this.setupServices();
+      await this.xlsxService?.createTableView(this.schoolTimesMap);
+      await this.xlsxService?.save();
+    } catch (e) {
+      this.loggingService?.errorLogging("크롤링 중 에러 발생", e);
+    } finally {
+      await this.close();
+    }
   }
 
   private async query({ schoolName, region, teacherName }: ComsiganCrawlData) {
@@ -196,7 +217,18 @@ class ComsiganService {
       endDate: new Date(endTime),
     }));
 
+    // 해당 학교의 교시 정보 크롤링
+    const times: string[] = [];
+    const timeElements = await targetIFrame.$$("div#hour2 table tbody tr td.교시");
+    for (const timeEl of timeElements) {
+      const text = await timeEl.evaluate((el) => el.textContent);
+      if (text === "교시") continue;
+      times.push(text);
+    }
+    this.schoolTimesMap.set(schoolName, times);
+
     for (let grade = 1; grade <= 3; grade++) {
+      this.loggingService.logging(`${grade}학년 크롤링 시도`);
       const MAX_ATTEMPTS = 30;
       let attempts = 0;
       let collectedDays = 0;

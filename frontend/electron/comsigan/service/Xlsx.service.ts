@@ -86,30 +86,26 @@ export default class XlsxService {
   /**
    * @description 데이터를 학교별 테이블 형태로 재구축하는 메서드
    */
-  public async createTableView() {
+  public async createTableView(schoolTimesMap: Map<string, string[]>) {
     const ws = await this.getWorksheet();
     const rawData = parseXlsxData(ws);
     const schoolGroupMap = createSchoolMap(rawData);
 
     for (const [schoolName, schoolData] of schoolGroupMap) {
-      await this.createSchoolSheet(schoolName, schoolData);
+      const schoolTimes = schoolTimesMap.get(schoolName);
+      if (!schoolTimes) throw new Error(`${schoolName} 교시 정보를 가져오지 못했습니다`);
+      await this.createSchoolSheet(schoolName, schoolData, schoolTimes);
     }
-
-    await this.save();
   }
 
   /**
    * @description 학교별 시트를 생성하는 메서드
    */
-  private async createSchoolSheet(schoolName: string, data: TBaseParams[]) {
+  private async createSchoolSheet(schoolName: string, data: TBaseParams[], schoolTimes: string[]) {
     const existingSheet = this.wb.getWorksheet(schoolName);
     if (existingSheet) {
       this.wb.removeWorksheet(existingSheet.id);
     }
-
-    // 교시 목록 정의
-    // Todo: 크롤링 과정에서 해당 학교의 전체 교시 정보를 크롤링해둬야 할 것으로 보인다.
-    const allTimes = ["1(08:20)", "2(09:20)", "3(10:20)", "4(11:20)", "5(13:10)", "6(14:10)", "7(15:10)", "8(16:10)"];
 
     const sheet = this.wb.addWorksheet(schoolName, { pageSetup: { fitToPage: true } });
     const dateGroupMap = createDateMap(data);
@@ -139,7 +135,7 @@ export default class XlsxService {
     [...dateGroupMap.keys()].forEach((date) => {
       const dateStartRow = currentRow;
 
-      allTimes.forEach((time, timeIndex) => {
+      schoolTimes.forEach((time, timeIndex) => {
         if (timeIndex === 0) {
           sheet.getCell(currentRow, 1).value = date; // 날짜 col
         }
@@ -174,7 +170,7 @@ export default class XlsxService {
       });
 
       // 월(27일)과 같은 날짜 셀 병합 (143 line 참고)
-      if (allTimes.length > 1) {
+      if (schoolTimes.length > 1) {
         sheet.mergeCells(dateStartRow, 1, currentRow - 1, 1);
         sheet.getCell(dateStartRow, 1).alignment = { vertical: "middle", horizontal: "center" };
       }

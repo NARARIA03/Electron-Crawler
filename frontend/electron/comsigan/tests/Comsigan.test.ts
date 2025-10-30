@@ -37,7 +37,7 @@ test("Comsigan 개발용 테스트", async () => {
     id,
     data: [
       { schoolName: "휘봉고", region: "서울", teacherName: "이수" },
-      { schoolName: "휘봉고", region: "서울", teacherName: "최정" },
+      { schoolName: "수락중", region: "서울", teacherName: "김연" },
     ],
     excelName: "QUERY컴시간테스트.xlsx",
     baseDir,
