@@ -13,6 +13,7 @@ import {
   initializeTaskIPC,
   cancelTaskIPC,
 } from "../utils/ipc";
+import { getStatusColor } from "@/utils";
 
 type Props = {
   task: NaraG2bTaskFE;
@@ -21,14 +22,7 @@ type Props = {
 const NaraG2bListItem = ({ task }: Props) => {
   const [time, setTime] = useState<string>("");
   const { id, data, excelName, scheduledTime, status } = task;
-
-  const statusColor = (() => {
-    if (status === "대기중") return "text-gray-400";
-    if (status === "예약완료") return "text-blue-400";
-    if (status === "작업중") return "text-orange-400";
-    if (status === "작업완료") return "text-green-400";
-    if (status === "작업실패") return "text-red-400";
-  })();
+  const statusColor = getStatusColor(status);
 
   const handleScheduledTimeChange = async (e: ChangeEvent<HTMLInputElement>) => {
     try {

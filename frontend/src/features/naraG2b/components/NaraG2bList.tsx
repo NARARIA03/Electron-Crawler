@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { addRowIPC, getAllTasksIPC } from "../utils/ipc";
 import { NaraG2bTaskFE } from "../types";
 import NaraG2bListItem from "./NaraG2bListItem";
+import { PREFIX } from "../constants";
 
 const NaraG2bList = () => {
   const [tasks, setTasks] = useState<NaraG2bTaskFE[]>([]);
@@ -22,9 +23,9 @@ const NaraG2bList = () => {
       setTasks(tasks);
     };
 
-    window.ipcRenderer.on("naraG2b:notifyUpdate", handleUpdate);
+    window.ipcRenderer.on(`${PREFIX}:notifyUpdate`, handleUpdate);
     return () => {
-      window.ipcRenderer.off("naraG2b:notifyUpdate", handleUpdate);
+      window.ipcRenderer.off(`${PREFIX}:notifyUpdate`, handleUpdate);
     };
   }, []);
 

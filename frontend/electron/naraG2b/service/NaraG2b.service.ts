@@ -1,9 +1,9 @@
-import puppeteer, { Browser } from "puppeteer";
-import LoggingService from "./Logging.service";
-import XlsxService from "./Xlsx.service";
 import fs from "fs";
 import path from "node:path";
 import { app } from "electron";
+import puppeteer, { Browser } from "puppeteer";
+import LoggingService from "../../shared/services/Logging.service";
+import XlsxService from "./Xlsx.service";
 
 export type NaraG2bCrawlData = {
   query: string; // 검색어 - 신발장

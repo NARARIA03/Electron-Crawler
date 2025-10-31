@@ -1,15 +1,12 @@
 import { Button, H1, Paragraph } from "@/components";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
 
 export const LandingPage = () => {
   const navigate = useNavigate();
 
   const onOpenGoKrClick = () => navigate("/openGoKr");
-
   const onNaraG2bClick = () => navigate("/naraG2b");
-
-  const handleNotImplementedClick = () => toast.warning("아직 구현 중인 기능입니다.");
+  const handleNotImplementedClick = () => navigate("/comsigan");
 
   return (
     <div className="flex flex-col justify-center items-center gap-32 mt-36">

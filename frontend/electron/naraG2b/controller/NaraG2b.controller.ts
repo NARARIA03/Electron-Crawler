@@ -1,6 +1,8 @@
 import { BrowserWindow, shell } from "electron";
 import path from "node:path";
-import NaraG2bService, { type NaraG2bCrawlData } from "../services/NaraG2b.service.js";
+import NaraG2bService, { type NaraG2bCrawlData } from "../service/NaraG2b.service";
+import type { TStatus } from "../../shared/types";
+import { PREFIX } from "../constants";
 
 export type NaraG2bTask = {
   id: string;
@@ -8,7 +10,7 @@ export type NaraG2bTask = {
   excelName: string | null;
   baseDir: string | null;
   scheduledTime?: Date;
-  status: "대기중" | "예약완료" | "작업중" | "작업완료" | "작업실패" | "취소됨";
+  status: TStatus;
   service?: NaraG2bService;
   debug: boolean;
 };
@@ -149,7 +151,7 @@ class NaraG2bController {
   private static notifyUpdate() {
     const allWindows = BrowserWindow.getAllWindows();
     allWindows.forEach((window) => {
-      window.webContents.send("naraG2b:notifyUpdate", this.getAllTasks());
+      window.webContents.send(`${PREFIX}:notifyUpdate`, this.getAllTasks());
     });
   }
 }

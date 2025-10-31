@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { updateTaskAllIPC } from "../utils/ipc";
+import { QUERY_EXCEL_PATH } from "../constants";
 
 type Props = {
   isOpen: boolean;
@@ -39,7 +40,7 @@ const NaraG2bSettingModal = ({ isOpen, onClose }: Props) => {
 
   const handleDownloadQueryExcel = () => {
     try {
-      window.ipcRenderer.invoke(DOWNLOAD_QUERY_EXCEL, "나라장터query.xlsx");
+      window.ipcRenderer.invoke(DOWNLOAD_QUERY_EXCEL, QUERY_EXCEL_PATH);
       toast.success("다운로드 폴더에 나라장터 검색어 설정용 xlsx가 저장되었습니다.");
     } catch (e) {
       console.error(e);

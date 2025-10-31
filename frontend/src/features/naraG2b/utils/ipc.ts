@@ -1,7 +1,8 @@
+import { PREFIX } from "../constants";
 import type { NaraG2bDataFE, NaraG2bTaskFE } from "../types";
 
 export const getAllTasksIPC = (): Promise<NaraG2bTaskFE[]> => {
-  return window.ipcRenderer.invoke("naraG2b:getAllTasks");
+  return window.ipcRenderer.invoke(`${PREFIX}:getAllTasks`);
 };
 
 export const addRowIPC = () => {
@@ -14,33 +15,33 @@ export const addRowIPC = () => {
     status: "대기중",
     debug: false,
   };
-  return window.ipcRenderer.invoke("naraG2b:addTask", newTask);
+  return window.ipcRenderer.invoke(`${PREFIX}:addTask`, newTask);
 };
 
 export const setScheduledTimeIPC = (id: string, scheduledTime: Date) => {
-  return window.ipcRenderer.invoke("naraG2b:updateTask", id, { scheduledTime });
+  return window.ipcRenderer.invoke(`${PREFIX}:updateTask`, id, { scheduledTime });
 };
 
 export const setTaskQueryIPC = (id: string, excelName: string | null, data: NaraG2bDataFE[] | null) => {
-  return window.ipcRenderer.invoke("naraG2b:updateTask", id, { excelName, data });
+  return window.ipcRenderer.invoke(`${PREFIX}:updateTask`, id, { excelName, data });
 };
 
 export const initializeTaskIPC = (id: string, baseDir: string | null, debug: boolean) => {
-  return window.ipcRenderer.invoke("naraG2b:updateTask", id, { baseDir, debug });
+  return window.ipcRenderer.invoke(`${PREFIX}:updateTask`, id, { baseDir, debug });
 };
 
 export const updateTaskAllIPC = async (newValue: Partial<NaraG2bTaskFE>) => {
-  return window.ipcRenderer.invoke("naraG2b:updateTaskAll", newValue);
+  return window.ipcRenderer.invoke(`${PREFIX}:updateTaskAll`, newValue);
 };
 
 export const scheduledTaskIPC = (id: string) => {
-  return window.ipcRenderer.invoke("naraG2b:scheduleTask", id);
+  return window.ipcRenderer.invoke(`${PREFIX}:scheduleTask`, id);
 };
 
 export const runTaskIPC = (id: string) => {
-  return window.ipcRenderer.invoke("naraG2b:runTask", id);
+  return window.ipcRenderer.invoke(`${PREFIX}:runTask`, id);
 };
 
 export const cancelTaskIPC = (id: string) => {
-  return window.ipcRenderer.invoke("naraG2b:cancelTask", id);
+  return window.ipcRenderer.invoke(`${PREFIX}:cancelTask`, id);
 };

@@ -16,7 +16,7 @@ export const parseExcelQuery = async (excelFile: File): Promise<unknown[]> => {
         const result: unknown[] = [];
 
         // 6번째 행부터 시작
-        ws.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+        ws.eachRow((row, rowNumber) => {
           if (rowNumber >= 6) {
             // 6번째 행부터
             const rowData = {
