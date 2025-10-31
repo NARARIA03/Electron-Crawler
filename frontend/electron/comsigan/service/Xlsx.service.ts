@@ -11,6 +11,7 @@ import {
   parseXlsxData,
 } from "../utils/dataParser";
 import type { TBaseParams } from "../types";
+import { applyCellBorder } from "../utils/xlsxStyle";
 
 export default class XlsxService {
   private wb: ExcelJS.Workbook;
@@ -102,10 +103,8 @@ export default class XlsxService {
    * @description 학교별 시트를 생성하는 메서드
    */
   private async createSchoolSheet(schoolName: string, data: TBaseParams[], schoolTimes: string[]) {
-    const existingSheet = this.wb.getWorksheet(schoolName);
-    if (existingSheet) {
-      this.wb.removeWorksheet(existingSheet.id);
-    }
+    const prevSheet = this.wb.getWorksheet(schoolName);
+    if (prevSheet) this.wb.removeWorksheet(prevSheet.id);
 
     const sheet = this.wb.addWorksheet(schoolName, { pageSetup: { fitToPage: true } });
     const dateGroupMap = createDateMap(data);
@@ -192,59 +191,22 @@ export default class XlsxService {
 
     // 헤더 행에 border 적용
     headerRow.eachCell({ includeEmpty: true }, (cell) => {
-      cell.border = {
-        top: { style: "thin" },
-        left: { style: "thin" },
-        bottom: { style: "thin" },
-        right: { style: "thin" },
-      };
+      applyCellBorder(cell);
     });
 
     // 날짜/교시 컬럼에 border 적용
     for (let rowNum = 2; rowNum <= rowCount; rowNum++) {
       const row = sheet.getRow(rowNum);
-      row.height = 30; // 2줄 표시를 위한 높이
-
-      // 날짜 컬럼 (1번)
-      const dateCell = sheet.getCell(rowNum, 1);
-      dateCell.alignment = { vertical: "middle", horizontal: "center" };
-      dateCell.border = {
-        top: { style: "thin" },
-        left: { style: "thin" },
-        bottom: { style: "thin" },
-        right: { style: "thin" },
-      };
-
-      // 교시 컬럼 (2번)
-      const timeCell = sheet.getCell(rowNum, 2);
-      timeCell.alignment = { vertical: "middle", horizontal: "center" };
-      timeCell.border = {
-        top: { style: "thin" },
-        left: { style: "thin" },
-        bottom: { style: "thin" },
-        right: { style: "thin" },
-      };
-    }
-
-    // 수업 정보 영역에 border 추가
-    for (let rowNum = 2; rowNum <= rowCount; rowNum++) {
-      const row = sheet.getRow(rowNum);
-      row.eachCell({ includeEmpty: true }, (cell) => {
-        cell.border = {
-          top: { style: "thin" },
-          left: { style: "thin" },
-          bottom: { style: "thin" },
-          right: { style: "thin" },
-        };
+      row.height = 30;
+      row.eachCell({ includeEmpty: true }, (cell, colNum) => {
+        applyCellBorder(cell, colNum <= 2 ? { align: "center" } : undefined);
       });
     }
 
-    // 컬럼 너비 자동 조정
+    sheet.getColumn(1).width = 12;
+    sheet.getColumn(2).width = 12;
     sheet.columns.forEach((column) => {
       column.width = 15;
     });
-    // 날짜 컬럼은 좀 더 넓게
-    sheet.getColumn(1).width = 12;
-    sheet.getColumn(2).width = 12;
   }
 }
