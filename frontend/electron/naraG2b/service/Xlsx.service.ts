@@ -1,4 +1,4 @@
-import { autoFitColumns } from "electron/shared/utils/autoFitColumns";
+import { autoFitColumns } from "../../shared/utils/autoFitColumns";
 import ExcelJS from "exceljs";
 import fs from "fs";
 import path from "path";
