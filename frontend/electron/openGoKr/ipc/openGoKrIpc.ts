@@ -1,36 +1,37 @@
 import { ipcMain } from "electron";
 import OpenGoKrController, { type OpenGoKrTask } from "../controller/OpenGoKr.controller";
+import { PREFIX } from "../constants";
 
 export const openGoKrIpc = () => {
   /** READ */
-  ipcMain.handle("openGoKr:getAllTasks", () => {
+  ipcMain.handle(`${PREFIX}:getAllTasks`, () => {
     return OpenGoKrController.getAllTasks();
   });
 
   /** CREATE */
-  ipcMain.handle("openGoKr:addTask", (_, task: OpenGoKrTask) => {
+  ipcMain.handle(`${PREFIX}:addTask`, (_, task: OpenGoKrTask) => {
     return OpenGoKrController.addTask(task);
   });
 
   /** UPDATE */
-  ipcMain.handle("openGoKr:updateTask", (_, id: string, newValue: Partial<OpenGoKrTask>) => {
+  ipcMain.handle(`${PREFIX}:updateTask`, (_, id: string, newValue: Partial<OpenGoKrTask>) => {
     return OpenGoKrController.updateTask(id, newValue);
   });
 
-  ipcMain.handle("openGoKr:updateTaskAll", (_, newValue: Partial<OpenGoKrTask>) => {
+  ipcMain.handle(`${PREFIX}:updateTaskAll`, (_, newValue: Partial<OpenGoKrTask>) => {
     return OpenGoKrController.updateTaskAll(newValue);
   });
 
   /** DELETE */
-  ipcMain.handle("openGoKr:cancelTask", (_, id: string) => {
+  ipcMain.handle(`${PREFIX}:cancelTask`, (_, id: string) => {
     return OpenGoKrController.cancelTask(id);
   });
 
-  ipcMain.handle("openGoKr:runTask", (_, id: string) => {
+  ipcMain.handle(`${PREFIX}:runTask`, (_, id: string) => {
     return OpenGoKrController.runTask(id);
   });
 
-  ipcMain.handle("openGoKr:scheduleTask", (_, id: string) => {
+  ipcMain.handle(`${PREFIX}:scheduleTask`, (_, id: string) => {
     return OpenGoKrController.scheduleTask(id);
   });
 };

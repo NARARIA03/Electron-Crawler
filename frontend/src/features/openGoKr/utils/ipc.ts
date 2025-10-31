@@ -1,6 +1,5 @@
+import { PREFIX } from "../constants";
 import type { OpenGoKrTaskFE } from "../types";
-
-const PREFIX = "openGoKr";
 
 export const getAllTasksIPC = (): Promise<OpenGoKrTaskFE[]> => {
   return window.ipcRenderer.invoke(`${PREFIX}:getAllTasks`);

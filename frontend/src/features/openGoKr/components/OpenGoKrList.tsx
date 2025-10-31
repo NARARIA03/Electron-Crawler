@@ -4,6 +4,7 @@ import OpenGoKrListItem from "./OpenGoKrListItem";
 import { useEffect, useState } from "react";
 import type { OpenGoKrTaskFE } from "../types";
 import { addRowIPC, getAllTasksIPC } from "../utils/ipc";
+import { PREFIX } from "../constants";
 
 const OpenGoKrList = () => {
   const [tasks, setTasks] = useState<OpenGoKrTaskFE[]>([]);
@@ -22,9 +23,9 @@ const OpenGoKrList = () => {
       setTasks(tasks);
     };
 
-    window.ipcRenderer.on("openGoKr:notifyUpdate", handleUpdate);
+    window.ipcRenderer.on(`${PREFIX}:notifyUpdate`, handleUpdate);
     return () => {
-      window.ipcRenderer.off("openGoKr:notifyUpdate", handleUpdate);
+      window.ipcRenderer.off(`${PREFIX}:notifyUpdate`, handleUpdate);
     };
   }, []);
 

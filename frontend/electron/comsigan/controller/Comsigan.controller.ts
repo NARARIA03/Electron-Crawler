@@ -2,6 +2,7 @@ import { BrowserWindow, shell } from "electron";
 import path from "node:path";
 import ComsiganService, { type ComsiganCrawlData } from "../service/Comsigan.service";
 import type { TStatus } from "../../shared/types";
+import { PREFIX } from "../constants";
 
 export type ComsiganTask = {
   id: string;
@@ -140,7 +141,7 @@ class ComsiganController {
   private static notifyUpdate() {
     const allWindows = BrowserWindow.getAllWindows();
     allWindows.forEach((window) => {
-      window.webContents.send("comsigan:notifyUpdate", this.getAllTasks());
+      window.webContents.send(`${PREFIX}:notifyUpdate`, this.getAllTasks());
     });
   }
 }

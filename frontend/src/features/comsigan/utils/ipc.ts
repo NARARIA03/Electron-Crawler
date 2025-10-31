@@ -1,6 +1,5 @@
+import { PREFIX } from "../constants";
 import type { ComsiganDataFE, ComsiganTaskFE } from "../types";
-
-const PREFIX = "comsigan";
 
 export const getAllTasksIpc = (): Promise<ComsiganTaskFE[]> => {
   return window.ipcRenderer.invoke(`${PREFIX}:getAllTasks`);

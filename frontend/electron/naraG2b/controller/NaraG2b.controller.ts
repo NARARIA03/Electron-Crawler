@@ -2,6 +2,7 @@ import { BrowserWindow, shell } from "electron";
 import path from "node:path";
 import NaraG2bService, { type NaraG2bCrawlData } from "../service/NaraG2b.service";
 import type { TStatus } from "../../shared/types";
+import { PREFIX } from "../constants";
 
 export type NaraG2bTask = {
   id: string;
@@ -150,7 +151,7 @@ class NaraG2bController {
   private static notifyUpdate() {
     const allWindows = BrowserWindow.getAllWindows();
     allWindows.forEach((window) => {
-      window.webContents.send("naraG2b:notifyUpdate", this.getAllTasks());
+      window.webContents.send(`${PREFIX}:notifyUpdate`, this.getAllTasks());
     });
   }
 }

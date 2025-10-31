@@ -1,6 +1,5 @@
+import { PREFIX } from "../constants";
 import type { NaraG2bDataFE, NaraG2bTaskFE } from "../types";
-
-const PREFIX = "naraG2b";
 
 export const getAllTasksIPC = (): Promise<NaraG2bTaskFE[]> => {
   return window.ipcRenderer.invoke(`${PREFIX}:getAllTasks`);

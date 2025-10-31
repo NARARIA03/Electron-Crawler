@@ -4,6 +4,7 @@ import { addRowIPC, getAllTasksIpc } from "../utils/ipc";
 import { Button, Table } from "@/components";
 import { Plus } from "lucide-react";
 import ComsiganListItem from "./ComsiganListItem";
+import { PREFIX } from "../constants";
 
 const ComsiganList = () => {
   const [tasks, setTasks] = useState<ComsiganTaskFE[]>([]);
@@ -20,9 +21,9 @@ const ComsiganList = () => {
       setTasks(tasks);
     };
 
-    window.ipcRenderer.on("comsigan:notifyUpdate", handleUpdate);
+    window.ipcRenderer.on(`${PREFIX}:notifyUpdate`, handleUpdate);
     return () => {
-      window.ipcRenderer.off("comsigan:notifyUpdate", handleUpdate);
+      window.ipcRenderer.off(`${PREFIX}:notifyUpdate`, handleUpdate);
     };
   }, []);
 

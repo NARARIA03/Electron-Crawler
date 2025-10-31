@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { TStatus } from "../../shared/types";
+import { PREFIX } from "../constants";
 
 export type OpenGoKrTask = {
   id: string;
@@ -213,7 +214,7 @@ class OpenGoKrController {
   private static notifyUpdate() {
     const allWindows = BrowserWindow.getAllWindows();
     allWindows.forEach((window) => {
-      window.webContents.send("openGoKr:notifyUpdate", this.getAllTasks());
+      window.webContents.send(`${PREFIX}:notifyUpdate`, this.getAllTasks());
     });
   }
 
