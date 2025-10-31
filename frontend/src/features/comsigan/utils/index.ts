@@ -16,8 +16,8 @@ export const parseExcelQuery = (excelFile: File): Promise<ComsiganDataFE[]> => {
 
         const result: ComsiganDataFE[] = [];
 
-        ws.eachRow({ includeEmpty: true }, (row, rowNum) => {
-          if (rowNum >= 3) {
+        ws.eachRow((row, rowNum) => {
+          if (rowNum >= 6) {
             result.push({
               schoolName: getCellValue(row, 1),
               region: getCellValue(row, 2),

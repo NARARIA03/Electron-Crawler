@@ -16,7 +16,7 @@ export const parseExcelQuery = async (excelFile: File): Promise<NaraG2bDataFE[]>
 
         const result: NaraG2bDataFE[] = [];
 
-        ws.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+        ws.eachRow((row, rowNumber) => {
           if (rowNumber >= 6) {
             const rowData = {
               query: getCellValue(row, 1),
