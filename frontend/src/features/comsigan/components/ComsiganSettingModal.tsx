@@ -5,7 +5,8 @@ import { updateTaskAllIPC } from "../utils/ipc";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components";
-import { Switch } from "@radix-ui/react-switch";
+import { Switch } from "@/components/ui/switch";
+import { QUERY_EXCEL_PATH } from "../constants";
 
 type Props = {
   isOpen: boolean;
@@ -39,7 +40,7 @@ const ComsiganSettingModal = ({ isOpen, onClose }: Props) => {
 
   const handleDownloadQueryExcel = () => {
     try {
-      window.ipcRenderer.invoke(DOWNLOAD_QUERY_EXCEL, "컴시간알리미query.xlsx");
+      window.ipcRenderer.invoke(DOWNLOAD_QUERY_EXCEL, QUERY_EXCEL_PATH);
       toast.success("다운로드 폴더에 컴시간알리미 검색어 설정용 xlsx가 저장되었습니다.");
     } catch (e) {
       console.error(e);
