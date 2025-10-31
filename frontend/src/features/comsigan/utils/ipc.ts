@@ -1,4 +1,4 @@
-import type { ComsiganTaskFE } from "../types";
+import type { ComsiganDataFE, ComsiganTaskFE } from "../types";
 
 const PREFIX = "comsigan";
 
@@ -23,7 +23,7 @@ export const setScheduledTimeIPC = (id: string, scheduledTime: Date) => {
   return window.ipcRenderer.invoke(`${PREFIX}:updateTask`, id, { scheduledTime });
 };
 
-export const setTaskQueryIPC = (id: string, excelName: string | null, data: ComsiganTaskFE[] | null) => {
+export const setTaskQueryIPC = (id: string, excelName: string | null, data: ComsiganDataFE[] | null) => {
   return window.ipcRenderer.invoke(`${PREFIX}:updateTask`, id, { excelName, data });
 };
 
