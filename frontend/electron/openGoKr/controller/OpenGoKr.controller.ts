@@ -3,6 +3,7 @@ import { type ChildProcess, spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import type { TStatus } from "../../shared/types";
 
 export type OpenGoKrTask = {
   id: string;
@@ -10,7 +11,7 @@ export type OpenGoKrTask = {
   excelName: string | null;
   baseDir: string | null;
   scheduledTime?: Date;
-  status: "대기중" | "예약완료" | "작업중" | "작업완료" | "작업실패" | "취소됨";
+  status: TStatus;
   process?: ChildProcess;
   logStream?: fs.WriteStream;
   debug: string | null;

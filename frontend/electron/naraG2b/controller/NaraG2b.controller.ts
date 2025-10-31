@@ -1,6 +1,7 @@
 import { BrowserWindow, shell } from "electron";
-import NaraG2bService, { type NaraG2bCrawlData } from "../service/NaraG2b.service";
 import path from "node:path";
+import NaraG2bService, { type NaraG2bCrawlData } from "../service/NaraG2b.service";
+import type { TStatus } from "../../shared/types";
 
 export type NaraG2bTask = {
   id: string;
@@ -8,7 +9,7 @@ export type NaraG2bTask = {
   excelName: string | null;
   baseDir: string | null;
   scheduledTime?: Date;
-  status: "대기중" | "예약완료" | "작업중" | "작업완료" | "작업실패" | "취소됨";
+  status: TStatus;
   service?: NaraG2bService;
   debug: boolean;
 };

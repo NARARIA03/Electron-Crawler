@@ -1,6 +1,7 @@
 import { BrowserWindow, shell } from "electron";
 import path from "node:path";
 import ComsiganService, { type ComsiganCrawlData } from "../service/Comsigan.service";
+import type { TStatus } from "../../shared/types";
 
 export type ComsiganTask = {
   id: string;
@@ -8,7 +9,7 @@ export type ComsiganTask = {
   excelName: string | null;
   baseDir: string | null;
   scheduledTime?: Date;
-  status: "대기중" | "예약완료" | "작업중" | "작업완료" | "작업실패" | "취소됨";
+  status: TStatus;
   service?: ComsiganService;
   debug: boolean;
 };
